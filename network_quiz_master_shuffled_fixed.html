@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="A comprehensive Network Engineering Quiz Game with hundreds of verified questions.">
+  <title>Network Quiz Master Pro - Enhanced</title>
+  <style>
+    /* --- THEME & VARIABLES --- */
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: rgba(30, 41, 59, 0.7);
+      --bg-card-hover: rgba(30, 41, 59, 0.9);
+      --primary: #38bdf8; /* Light Blue */
+      --primary-glow: rgba(56, 189, 248, 0.4);
+      --secondary: #818cf8; /* Indigo */
+      --success: #34d399; /* Emerald */
+      --success-glow: rgba(52, 211, 153, 0.3);
+      --danger: #f87171; /* Red */
+      --danger-glow: rgba(248, 113, 113, 0.3);
+      --warning: #fbbf24; /* Amber */
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: rgba(148, 163, 184, 0.1);
+      --radius: 16px;
+      --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* --- GLOBAL RESET & LAYOUT --- */
+    * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      margin: 0;
+      font-family: var(--font-main);
+      color: var(--text-main);
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.08), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(129, 140, 248, 0.08), transparent 25%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background animation */
+    body::before {
+      content: "";
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: -1;
+      animation: drift 60s linear infinite;
+    }
+
+    @keyframes drift { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* --- CONTAINER & UTILS --- */
+    .app {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .screen { display: none; opacity: 0; transition: opacity 0.3s ease; }
+    .screen.active { display: block; opacity: 1; animation: fadeIn 0.4s ease-out forwards; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .hidden { display: none !important; }
+
+    /* --- CARDS & GLASSMORPHISM --- */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      margin-bottom: 1.5rem;
+    }
+
+    h1 { font-size: 2.5rem; font-weight: 800; margin: 0 0 0.5rem 0; background: linear-gradient(135deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
+    h2 { font-size: 1.5rem; margin: 1.5rem 0 1rem 0; color: var(--text-main); }
+    p { color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem; }
+    strong { color: var(--text-main); font-weight: 600; }
+
+    /* --- GRID SYSTEM --- */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    
+    .stat-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      padding: 1.25rem;
+      border-radius: 12px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .stat-box:hover { transform: translateY(-2px); border-color: var(--primary); }
+    .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 0.5rem; display: block; }
+    .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--primary); }
+
+    /* --- FORM ELEMENTS --- */
+    .search {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text-main);
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .search:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
+
+    /* --- BUTTONS --- */
+    button {
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      border-radius: 12px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #0f172a;
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4); }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--text-muted); }
+
+    .btn-danger { background: rgba(248, 113, 113, 0.15); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
+    .btn-danger:hover { background: rgba(248, 113, 113, 0.25); }
+
+    /* --- SELECTION CARDS (Mode/Length) --- */
+    .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+    .pick {
+      background: rgba(255, 255, 255, 0.03);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .pick:hover { background: rgba(255, 255, 255, 0.06); }
+    .pick.selected { border-color: var(--primary); background: rgba(56, 189, 248, 0.08); }
+    .pick h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; }
+    .pick p { margin: 0; font-size: 0.9rem; }
+
+    /* --- GAMEPLAY UI --- */
+    .topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 1.5rem; }
+    
+    .pill {
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pill.timer-critical { background: rgba(248, 113, 113, 0.15); color: var(--danger); border-color: rgba(248, 113, 113, 0.3); animation: pulseRed 1s infinite; }
+    
+    @keyframes pulseRed { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      width: 0%;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .category-tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--secondary);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: rgba(129, 140, 248, 0.1);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .question-text {
+      font-size: 1.4rem;
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 2rem;
+      min-height: 3.5rem; /* Prevent layout jump */
+    }
+
+    /* --- ANSWERS --- */
+    .answers-grid { display: grid; gap: 12px; }
+    .answer-btn {
+      width: 100%;
+      text-align: left;
+      padding: 16px 20px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      font-size: 1rem;
+      transition: all 0.2s;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .answer-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.08); border-color: var(--text-muted); transform: translateX(4px); }
+    .answer-btn:focus-visible { box-shadow: 0 0 0 2px var(--primary); }
+    
+    /* States */
+    .answer-btn.correct { background: rgba(52, 211, 153, 0.15); border-color: var(--success); color: var(--success); }
+    .answer-btn.wrong { background: rgba(248, 113, 113, 0.15); border-color: var(--danger); color: var(--danger); }
+    .answer-btn:disabled { cursor: default; transform: none; }
+
+    /* Key hint on buttons */
+    .key-hint {
+      font-size: 0.7rem;
+      opacity: 0.5;
+      background: rgba(0,0,0,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-right: 10px;
+    }
+
+    /* --- EXPLANATION BOX --- */
+    .explanation {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 4px solid var(--primary);
+      border-radius: 0 8px 8px 0;
+      display: none;
+      animation: slideDown 0.3s ease;
+    }
+    .explanation.show { display: block; }
+    .explanation strong { color: var(--primary); display: block; margin-bottom: 0.25rem; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* --- RESULT SCREEN --- */
+    .result-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1.5rem 0; }
+    .review-list { display: grid; gap: 1rem; max-height: 500px; overflow-y: auto; padding-right: 5px; }
+    .review-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 12px;
+      border-left: 4px solid transparent;
+    }
+    .review-item.correct { border-left-color: var(--success); }
+    .review-item.wrong { border-left-color: var(--danger); }
+    
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    /* Mobile Adjustments */
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8rem; }
+      .question-text { font-size: 1.1rem; }
+      .card { padding: 1.25rem; }
+      .topbar { justify-content: center; }
+      .result-stats { grid-template-columns: 1fr; }
+      .btn-row { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- START SCREEN -->
+  <section id="startScreen" class="screen active">
+    <div class="card" style="text-align: center;">
+      <h1>Network Quiz Master</h1>
+      <p>The ultimate challenge for Network Engineers. Hundreds of questions covering OSI, TCP/IP, Security, Routing, and CLI.</p>
+      
+      <div class="grid">
+        <div class="stat-box">
+          <span class="stat-label">Total Questions</span>
+          <span class="stat-value" id="totalQuestionsDisplay">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">High Score</span>
+          <span class="stat-value" id="highScoreDisplay">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Categories</span>
+          <span class="stat-value" id="categoryTotalDisplay">0</span>
+        </div>
+      </div>
+
+      <div class="btn-row" style="display: flex; justify-content: center; gap: 10px;">
+        <button id="startBtn" class="btn-primary">Start Game</button>
+        <button id="showCategoriesBtn" class="btn-secondary">View Categories</button>
+      </div>
+      <p id="categoryText" style="margin-top: 1rem; font-size: 0.9rem; min-height: 1.5rem;"></p>
+    </div>
+
+    <div class="card">
+      <h2>Configuration</h2>
+      <div style="margin-bottom: 1.5rem;">
+        <label style="display:block; margin-bottom:0.5rem; color:var(--text-muted); font-size:0.9rem;">SELECT MODE</label>
+        <div id="modeOptions" class="options-grid">
+          <div class="pick selected" data-mode="practice">
+            <h3>Practice</h3>
+            <p>Unlimited time. Instant feedback.</p>
+          </div>
+          <div class="pick" data-mode="timed">
+            <h3>Timed</h3>
+            <p>20s per question. Test your speed.</p>
+          </div>
+          <div class="pick" data-mode="exam">
+            <h3>Exam</h3>
+            <p>25s per question. No feedback until end.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label style="display:block; margin-bottom:0.5rem; color:var(--text-muted); font-size:0.9rem;">SELECT LENGTH</label>
+        <div id="lengthOptions" class="options-grid">
+          <div class="pick selected" data-length="20"><h3>20 Questions</h3><p>Quick warm-up</p></div>
+          <div class="pick" data-length="50"><h3>50 Questions</h3><p>Standard session</p></div>
+          <div class="pick" data-length="100"><h3>100 Questions</h3><p>Deep dive</p></div>
+          <div class="pick" data-length="all"><h3>All Questions</h3><p>Marathon mode</p></div>
+        </div>
+      </div>
+
+      <div>
+        <label style="display:block; margin-bottom:0.5rem; color:var(--text-muted); font-size:0.9rem;">TOPIC FILTER (OPTIONAL)</label>
+        <input id="topicSearch" class="search" placeholder="Search topics (e.g., BGP, VLAN, IPv6)..." />
+        <div id="topicCount" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--primary);">Showing full bank: 0 questions</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ SCREEN -->
+  <section id="quizScreen" class="screen">
+    <div class="card">
+      <div class="topbar">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <div class="pill" id="modeLabel">Mode</div>
+          <div class="pill" id="streakLabel" style="background:rgba(251, 191, 36, 0.15); color:var(--warning); border-color: rgba(251, 191, 36, 0.3);">🔥 Streak: 0</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <div class="pill" id="timerLabel">Time: --</div>
+          <button id="quitBtn" class="btn-danger" style="padding: 6px 12px; font-size: 0.8rem;">Quit</button>
+        </div>
+      </div>
+
+      <div class="progress-track">
+        <div id="progressBar" class="progress-fill"></div>
+      </div>
+
+      <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: baseline;">
+        <div>
+          <span id="questionCategory" class="category-tag">Category</span>
+        </div>
+        <div style="font-size: 0.9rem; color: var(--text-muted);">
+          <span id="questionCurrent">1</span> / <span id="questionTotal">20</span>
+        </div>
+      </div>
+
+      <h2 id="questionText" class="question-text" aria-live="polite">Loading...</h2>
+
+      <div id="answersWrap" class="answers-grid">
+        <!-- Buttons injected by JS -->
+      </div>
+
+      <div id="explanationBox" class="explanation">
+        <strong id="feedbackTitle">Correct!</strong>
+        <span id="feedbackText">Explanation goes here.</span>
+      </div>
+
+      <div class="btn-row" id="nextWrap" style="margin-top: 1.5rem; justify-content: flex-end; display: none;">
+        <button id="nextBtn" class="btn-primary">Next Question <span style="font-size:0.8em; opacity:0.7; margin-left:5px;">↵</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT SCREEN -->
+  <section id="resultScreen" class="screen">
+    <div class="card" style="text-align: center;">
+      <h1>Quiz Complete!</h1>
+      <p id="finalMessage" style="font-size: 1.1rem; margin-bottom: 2rem;">Message</p>
+      
+      <div class="result-stats">
+        <div class="stat-box">
+          <span class="stat-label">Score</span>
+          <span class="stat-value" id="finalScore">0%</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Correct</span>
+          <span class="stat-value" style="color:var(--success)" id="correctCount">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Wrong</span>
+          <span class="stat-value" style="color:var(--danger)" id="wrongCount">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Best Streak</span>
+          <span class="stat-value" style="color:var(--warning)" id="bestStreakDisplay">0</span>
+        </div>
+      </div>
+
+      <div class="btn-row" style="display: flex; justify-content: center; gap: 15px; margin-top: 1.5rem;">
+        <button id="restartBtn" class="btn-primary">Play Again</button>
+        <button id="reviewToggleBtn" class="btn-secondary">Toggle Review</button>
+      </div>
+    </div>
+
+    <div id="reviewSection" class="card hidden">
+      <h2>Answer Review</h2>
+      <div id="reviewList" class="review-list">
+        <!-- Review items injected here -->
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/**
+ * DATABASE: 357 Verified Networking Questions
+ * Accuracy is paramount. This data is read-only during runtime.
+ */
+const questionBank = [
+    {"category": "Networking Basics", "question": "What is a network?", "options": ["A group of connected devices that can exchange data", "A single computer only", "Only the internet", "A type of password"], "answer": 0, "explanation": "A network is a group of connected devices that can communicate and exchange data."}, 
+    {"category": "Networking Basics", "question": "What is a host in networking?", "options": ["Any device that can send or receive network traffic", "Only a router", "Only a server", "Only a printer"], "answer": 0, "explanation": "A host is any end device that can send or receive data on a network."}, 
+    {"category": "Networking Basics", "question": "What is a node?", "options": ["Any connected device or network point", "Only a switch", "Only a cable", "Only a wireless signal"], "answer": 0, "explanation": "A node is any device or connection point on a network."}, 
+    {"category": "Networking Basics", "question": "What does LAN stand for?", "options": ["Local Area Network", "Long Access Network", "Layered Area Network", "Linked Area Network"], "answer": 0, "explanation": "LAN stands for Local Area Network."}, 
+    {"category": "Networking Basics", "question": "What does WAN stand for?", "options": ["Wide Area Network", "Wireless Access Node", "Wired Area Network", "World Access Network"], "answer": 0, "explanation": "WAN stands for Wide Area Network."}, 
+    {"category": "Networking Basics", "question": "What does MAN stand for?", "options": ["Metropolitan Area Network", "Managed Area Node", "Multiple Access Network", "Main Area Network"], "answer": 0, "explanation": "MAN stands for Metropolitan Area Network."}, 
+    {"category": "Networking Basics", "question": "Which network usually covers a single building or campus area?", "options": ["LAN", "WAN", "Internet backbone", "Satellite network only"], "answer": 0, "explanation": "A LAN usually covers a limited local area such as a building or campus."}, 
+    {"category": "Networking Basics", "question": "Which network type usually connects geographically distant locations?", "options": ["WAN", "LAN", "PAN only", "Loopback"], "answer": 0, "explanation": "A WAN connects networks over larger geographic distances."}, 
+    {"category": "Networking Basics", "question": "What does PAN stand for?", "options": ["Personal Area Network", "Private Access Network", "Point Area Network", "Protected Area Network"], "answer": 0, "explanation": "PAN stands for Personal Area Network."}, 
+    {"category": "Networking Basics", "question": "Which of the following is an example of a PAN?", "options": ["Bluetooth connection between a phone and earbuds", "A company campus network", "The public internet", "A city-wide fiber ring"], "answer": 0, "explanation": "Bluetooth links between personal devices are common PAN examples."}, 
+    {"category": "Networking Basics", "question": "What is bandwidth?", "options": ["The maximum data-carrying capacity of a link", "The actual measured download completion", "A type of IP address", "A MAC table entry"], "answer": 0, "explanation": "Bandwidth is the theoretical maximum capacity of a connection."}, 
+    {"category": "Networking Basics", "question": "What is throughput?", "options": ["The actual rate of successful data transfer", "The maximum possible speed only", "A DNS record type", "A physical connector"], "answer": 0, "explanation": "Throughput is the real rate of successfully delivered data."}, 
+    {"category": "Networking Basics", "question": "What is latency?", "options": ["The delay between sending and receiving data", "The total storage on a switch", "The cable thickness", "A routing protocol"], "answer": 0, "explanation": "Latency is the time delay in communication."}, 
+    {"category": "Networking Basics", "question": "What is jitter?", "options": ["Variation in packet delay over time", "Maximum bandwidth limit", "A type of firewall", "A port number"], "answer": 0, "explanation": "Jitter is the variation in latency and can affect voice/video quality."}, 
+    {"category": "Networking Basics", "question": "What is packet loss?", "options": ["Data packets failing to reach their destination", "A larger subnet mask", "A successful CRC check", "A DHCP lease renewal"], "answer": 0, "explanation": "Packet loss occurs when packets are dropped before arriving."}, 
+    {"category": "Networking Basics", "question": "Which metric matters most for smooth voice calls?", "options": ["Low latency and low jitter", "Large monitor size", "Only high storage", "Only many VLANs"], "answer": 0, "explanation": "Voice traffic is sensitive to delay and variation in delay."}, 
+    {"category": "Networking Basics", "question": "What is a topology?", "options": ["The arrangement of devices and links in a network", "A password policy", "A kind of MAC address", "An IP version"], "answer": 0, "explanation": "Topology describes how devices and links are arranged."}, 
+    {"category": "Networking Basics", "question": "Which topology connects all devices to a central point like a switch?", "options": ["Star topology", "Ring topology", "Bus topology", "Mesh topology only"], "answer": 0, "explanation": "In a star topology, endpoints connect to a central device."}, 
+    {"category": "Networking Basics", "question": "Which topology provides multiple possible paths between devices?", "options": ["Mesh topology", "Bus topology", "Point-to-point only", "Token ring only"], "answer": 0, "explanation": "Mesh topologies provide redundancy through multiple paths."}, 
+    {"category": "Networking Basics", "question": "What is a protocol?", "options": ["A set of rules for communication between devices", "A physical port on a switch", "A kind of monitor", "A device serial number"], "answer": 0, "explanation": "Protocols define how data is formatted, transmitted, and interpreted."}, 
+    {"category": "Networking Basics", "question": "Why are standards important in networking?", "options": ["They allow devices from different vendors to interoperate", "They eliminate the need for IP addresses", "They replace protocols", "They make cables wireless"], "answer": 0, "explanation": "Standards ensure interoperability across vendors and technologies."}, 
+    {"category": "Networking Basics", "question": "Which organization publishes many Ethernet and Wi‑Fi standards?", "options": ["IEEE", "IETF", "ICANN", "PCI-SIG"], "answer": 0, "explanation": "IEEE publishes standards such as 802.3 and 802.11."}, 
+    {"category": "Networking Basics", "question": "Which organization develops many internet protocol standards such as TCP and IP?", "options": ["IETF", "IEEE", "USB-IF", "W3C only"], "answer": 0, "explanation": "IETF develops many internet protocol standards and RFCs."}, 
+    {"category": "Networking Basics", "question": "What does full-duplex mean?", "options": ["A device can send and receive at the same time", "A cable works only one way", "A switch supports only VLANs", "A router uses only one interface"], "answer": 0, "explanation": "Full-duplex allows simultaneous transmission and reception."}, 
+    {"category": "Networking Basics", "question": "What does half-duplex mean?", "options": ["A device cannot send and receive at the same time", "A device has half an IP address", "A cable is broken", "Only one VLAN exists"], "answer": 0, "explanation": "Half-duplex communication allows transmission in one direction at a time."}, 
+    {"category": "Networking Basics", "question": "Which device typically creates separate collision domains for each port?", "options": ["Switch", "Hub", "Repeater", "Coax terminator"], "answer": 0, "explanation": "A switch creates a separate collision domain per port."}, 
+    {"category": "Networking Basics", "question": "Which device forwards frames based on MAC addresses?", "options": ["Switch", "Router", "Repeater", "Modem"], "answer": 0, "explanation": "Switches forward Ethernet frames using MAC addresses."}, 
+    {"category": "Networking Basics", "question": "Which device forwards packets based on IP addresses?", "options": ["Router", "Hub", "Repeater", "Patch panel"], "answer": 0, "explanation": "Routers make forwarding decisions using IP information."}, 
+    {"category": "Networking Basics", "question": "What is a broadcast?", "options": ["Traffic sent to all devices in a broadcast domain", "Traffic sent to one destination only", "Traffic sent only to routers", "Encrypted traffic only"], "answer": 0, "explanation": "A broadcast is intended for all hosts in the same broadcast domain."}, 
+    {"category": "Networking Basics", "question": "What is a unicast?", "options": ["Traffic sent from one source to one destination", "Traffic sent to all hosts", "Traffic sent to selected many hosts", "Traffic without an address"], "answer": 0, "explanation": "Unicast is one-to-one communication."}, 
+    {"category": "Networking Basics", "question": "What is a multicast?", "options": ["Traffic sent from one source to a selected group of receivers", "Traffic sent to every host", "Traffic with no destination", "Only wireless traffic"], "answer": 0, "explanation": "Multicast delivers traffic to subscribed members of a group."}, 
+    {"category": "Networking Basics", "question": "What is a collision domain?", "options": ["A network segment where frame collisions can occur", "A VLAN ID range", "A DNS namespace", "A routing table"], "answer": 0, "explanation": "Collisions can happen when multiple devices share the same medium in certain older/shared environments."}, 
+    {"category": "Networking Basics", "question": "What is a broadcast domain?", "options": ["A group of devices that receive the same Layer 2 broadcast", "A group sharing one password", "A set of routers only", "A fiber standard"], "answer": 0, "explanation": "A broadcast domain contains devices that receive a given Layer 2 broadcast."}, 
+    {"category": "Networking Basics", "question": "Which device extends signal distance at Layer 1 without understanding addresses?", "options": ["Repeater", "Switch", "Router", "Firewall"], "answer": 0, "explanation": "A repeater regenerates signals and operates at Layer 1."}, 
+    {"category": "Networking Basics", "question": "Which statement about a hub is correct?", "options": ["It repeats incoming traffic out other ports and does not learn MAC addresses", "It routes by IP", "It performs NAT", "It filters traffic by port number"], "answer": 0, "explanation": "A hub is a Layer 1 multiport repeater."}, 
+    {"category": "Networking Basics", "question": "Which device breaks a network into multiple collision domains but usually one broadcast domain by default?", "options": ["Switch", "Hub", "Repeater", "Media converter"], "answer": 0, "explanation": "A switch separates collision domains, but the same VLAN remains one broadcast domain."}, 
+    {"category": "Networking Basics", "question": "What is the internet?", "options": ["A global network of interconnected networks", "A single company LAN", "Only web servers", "A cabling standard"], "answer": 0, "explanation": "The internet is a network of networks."}, 
+    {"category": "Networking Basics", "question": "What is an intranet?", "options": ["A private internal network using internet technologies", "The public internet", "A wireless standard", "A type of router memory"], "answer": 0, "explanation": "An intranet is a private internal network."}, 
+    {"category": "Networking Basics", "question": "What is an extranet?", "options": ["A private network that gives controlled access to external users", "A public DNS server", "A crossover cable", "A loopback interface"], "answer": 0, "explanation": "An extranet extends selected internal resources to outside parties."}, 
+    {"category": "Networking Basics", "question": "Which term describes converting a signal from one medium to another, such as copper to fiber?", "options": ["Media conversion", "Subnetting", "Encapsulation", "Fragmentation"], "answer": 0, "explanation": "Media converters change one physical medium to another."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is Layer 1?", "options": ["Physical", "Data Link", "Network", "Transport", "Session", "Presentation", "Application"], "answer": 0, "explanation": "Layer 1 of the OSI model is the Physical layer."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is Layer 2?", "options": ["Physical", "Data Link", "Network", "Transport", "Session", "Presentation", "Application"], "answer": 1, "explanation": "Layer 2 of the OSI model is the Data Link layer."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is Layer 3?", "options": ["Physical", "Data Link", "Network", "Transport", "Session", "Presentation", "Application"], "answer": 2, "explanation": "Layer 3 of the OSI model is the Network layer."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is Layer 4?", "options": ["Physical", "Data Link", "Network", "Transport", "Session", "Presentation", "Application"], "answer": 3, "explanation": "Layer 4 of the OSI model is the Transport layer."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is Layer 5?", "options": ["Physical", "Data Link", "Network", "Transport", "Session", "Presentation", "Application"], "answer": 4, "explanation": "Layer 5 of the OSI model is the Session layer."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is Layer 6?", "options": ["Physical", "Data Link", "Network", "Transport", "Session", "Presentation", "Application"], "answer": 5, "explanation": "Layer 6 of the OSI model is the Presentation layer."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is Layer 7?", "options": ["Physical", "Data Link", "Network", "Transport", "Session", "Presentation", "Application"], "answer": 6, "explanation": "Layer 7 of the OSI model is the Application layer."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is responsible for moving raw bits across the medium?", "options": ["Physical", "Data Link", "Network", "Transport"], "answer": 0, "explanation": "The Physical layer handles signaling and transmission of raw bits."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is responsible for MAC addressing and framing?", "options": ["Data Link", "Network", "Transport", "Application"], "answer": 0, "explanation": "The Data Link layer handles framing, MAC addressing, and error detection at Layer 2."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is responsible for logical addressing and routing?", "options": ["Network", "Data Link", "Transport", "Session"], "answer": 0, "explanation": "The Network layer handles logical addressing and routing."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is responsible for end-to-end delivery and segmentation?", "options": ["Transport", "Network", "Data Link", "Presentation"], "answer": 0, "explanation": "The Transport layer handles end-to-end transport, segmentation, and reliability functions."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is most associated with encryption and data format translation?", "options": ["Presentation", "Session", "Transport", "Physical"], "answer": 0, "explanation": "The Presentation layer is often associated with format translation and encryption."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is most associated with establishing, managing, and terminating sessions?", "options": ["Session", "Application", "Network", "Physical"], "answer": 0, "explanation": "The Session layer manages dialogs or sessions."}, 
+    {"category": "OSI Model", "question": "Which OSI layer is closest to the end user?", "options": ["Application", "Presentation", "Session", "Transport"], "answer": 0, "explanation": "The Application layer provides network services to applications."}, 
+    {"category": "OSI Model", "question": "What is encapsulation?", "options": ["Adding protocol headers and sometimes trailers as data moves down the stack", "Removing all addresses from a packet", "Changing IPv4 to IPv6", "Only encrypting traffic"], "answer": 0, "explanation": "Encapsulation adds the relevant protocol information at each layer."}, 
+    {"category": "OSI Model", "question": "What is de-encapsulation?", "options": ["Removing protocol headers and trailers as data moves up the stack", "Adding VLAN tags", "Assigning an IP address", "Compressing a file"], "answer": 0, "explanation": "De-encapsulation removes layer-specific information at the receiving side."}, 
+    {"category": "OSI Model", "question": "At the OSI model, which PDU is associated with Layer 4?", "options": ["Segment", "Packet", "Frame", "Bits"], "answer": 0, "explanation": "A common Layer 4 PDU name is segment, especially for TCP."}, 
+    {"category": "OSI Model", "question": "At the OSI model, which PDU is associated with Layer 3?", "options": ["Packet", "Segment", "Frame", "Bits"], "answer": 0, "explanation": "The Layer 3 PDU is commonly called a packet."}, 
+    {"category": "OSI Model", "question": "At the OSI model, which PDU is associated with Layer 2?", "options": ["Frame", "Packet", "Segment", "Bits"], "answer": 0, "explanation": "The Layer 2 PDU is called a frame."}, 
+    {"category": "OSI Model", "question": "At the OSI model, which PDU is associated with Layer 1?", "options": ["Bits", "Frame", "Packet", "Segment"], "answer": 0, "explanation": "The Physical layer transmits bits."}, 
+    {"category": "TCP/IP Model", "question": "Which layer of the TCP/IP model includes protocols such as HTTP and DNS?", "options": ["Application", "Transport", "Internet", "Network Access"], "answer": 0, "explanation": "HTTP and DNS are application-layer protocols in the TCP/IP model."}, 
+    {"category": "TCP/IP Model", "question": "Which TCP/IP layer includes TCP and UDP?", "options": ["Transport", "Internet", "Application", "Network Access"], "answer": 0, "explanation": "TCP and UDP belong to the Transport layer."}, 
+    {"category": "TCP/IP Model", "question": "Which TCP/IP layer includes IP and ICMP?", "options": ["Internet", "Application", "Transport", "Network Access"], "answer": 0, "explanation": "IP and ICMP are Internet layer protocols."}, 
+    {"category": "TCP/IP Model", "question": "Which TCP/IP layer is most closely associated with Ethernet framing and media access?", "options": ["Network Access", "Internet", "Application", "Transport"], "answer": 0, "explanation": "The Network Access layer covers technologies such as Ethernet and Wi‑Fi."}, 
+    {"category": "TCP/IP Model", "question": "How many layers are commonly shown in the standard TCP/IP model?", "options": ["4", "5", "6", "7"], "answer": 0, "explanation": "The classic TCP/IP model is usually shown with 4 layers."}, 
+    {"category": "TCP/IP Model", "question": "Which statement is accurate?", "options": ["The OSI model has 7 layers and the classic TCP/IP model has 4 layers", "OSI and TCP/IP both always have 7 layers", "TCP/IP has only 2 layers", "OSI has 4 layers"], "answer": 0, "explanation": "OSI is a 7-layer reference model, while classic TCP/IP is typically 4 layers."}, 
+    {"category": "OSI Model", "question": "Which device is primarily associated with Layer 2 forwarding?", "options": ["Switch", "Router", "Hub", "Repeater"], "answer": 0, "explanation": "Switches primarily forward traffic at Layer 2."}, 
+    {"category": "OSI Model", "question": "Which device is primarily associated with Layer 3 forwarding?", "options": ["Router", "Hub", "Repeater", "Patch panel"], "answer": 0, "explanation": "Routers forward traffic at Layer 3."}, 
+    {"category": "OSI Model", "question": "Which layer is responsible for selecting paths across networks?", "options": ["Network", "Data Link", "Presentation", "Session"], "answer": 0, "explanation": "Path selection is a Network layer function."}, 
+    {"category": "OSI Model", "question": "Which layer deals directly with voltages, light pulses, or radio signaling?", "options": ["Physical", "Transport", "Network", "Application"], "answer": 0, "explanation": "Signaling belongs to the Physical layer."}, 
+    {"category": "OSI Model", "question": "Which layer commonly uses MAC addresses?", "options": ["Data Link", "Network", "Transport", "Application"], "answer": 0, "explanation": "MAC addresses are used at Layer 2."}, 
+    {"category": "OSI Model", "question": "Which layer commonly uses IP addresses?", "options": ["Network", "Data Link", "Transport", "Session"], "answer": 0, "explanation": "IP addressing is a Layer 3 function."}, 
+    {"category": "OSI Model", "question": "Which layer commonly uses port numbers?", "options": ["Transport", "Network", "Data Link", "Physical"], "answer": 0, "explanation": "TCP and UDP use port numbers at the Transport layer."}, 
+    {"category": "OSI Model", "question": "Which OSI layer would Ethernet belong to most directly?", "options": ["Data Link", "Application", "Transport", "Session"], "answer": 0, "explanation": "Ethernet is primarily a Layer 2 technology, though it also has Physical layer aspects."}, 
+    {"category": "OSI Model", "question": "Which OSI layer would a copper cable specification most directly belong to?", "options": ["Physical", "Network", "Session", "Application"], "answer": 0, "explanation": "Cable specifications are part of the Physical layer."}, 
+    {"category": "OSI Model", "question": "Which process happens as data moves from an application toward the wire?", "options": ["Encapsulation", "Route summarization", "ARP poisoning", "Fragment recovery"], "answer": 0, "explanation": "Data is encapsulated as it moves down the stack."}, 
+    {"category": "OSI Model", "question": "Which statement best describes adjacent-layer interaction?", "options": ["Each layer provides services to the layer above and uses services from the layer below", "All layers operate independently with no relation", "Only Layer 7 provides services", "Only routers use layers"], "answer": 0, "explanation": "Adjacent layers interact by providing and consuming services."}, 
+    {"category": "OSI Model", "question": "In same-layer interaction, matching protocols on sender and receiver communicate logically at the same layer. Which statement is true?", "options": ["Peer layers communicate logically using the same protocol", "Only physical cables interact", "Only switches use same-layer interaction", "It happens only in wireless"], "answer": 0, "explanation": "Same-layer or peer-layer communication is a core concept in layered models."}, 
+    {"category": "TCP/IP Model", "question": "Which is a transport-layer protocol that provides reliable delivery?", "options": ["TCP", "UDP", "IP", "ARP"], "answer": 0, "explanation": "TCP provides connection-oriented reliable transport."}, 
+    {"category": "TCP/IP Model", "question": "Which is a transport-layer protocol that is connectionless?", "options": ["UDP", "TCP", "IP", "ICMP"], "answer": 0, "explanation": "UDP is connectionless and has lower overhead."}, 
+    {"category": "TCP/IP Model", "question": "Which protocol is used to carry web traffic securely over TLS?", "options": ["HTTPS", "ARP", "DHCP", "SNMP trap"], "answer": 0, "explanation": "HTTPS is the secure form of HTTP using TLS."}, 
+    {"category": "TCP/IP Model", "question": "Which protocol resolves domain names to IP addresses?", "options": ["DNS", "ARP", "NTP", "FTP"], "answer": 0, "explanation": "DNS resolves names to IP addresses."}, 
+    {"category": "TCP/IP Model", "question": "Which protocol automatically assigns IP settings to hosts?", "options": ["DHCP", "DNS", "HTTP", "SSH"], "answer": 0, "explanation": "DHCP automatically provides network configuration."}, 
+    {"category": "TCP/IP Model", "question": "Which protocol is commonly used for secure remote CLI access?", "options": ["SSH", "Telnet", "FTP", "TFTP"], "answer": 0, "explanation": "SSH provides encrypted remote command-line access."}, 
+    {"category": "TCP/IP Model", "question": "Which older remote CLI protocol sends data unencrypted?", "options": ["Telnet", "SSH", "HTTPS", "SNMPv3"], "answer": 0, "explanation": "Telnet is unencrypted and generally avoided on untrusted networks."}, 
+    {"category": "IP Addressing", "question": "What is an IP address?", "options": ["A logical address used to identify a host on a network", "A physical burned-in hardware ID", "A switch serial number", "A cable label"], "answer": 0, "explanation": "An IP address is a logical address used for communication on IP networks."}, 
+    {"category": "IP Addressing", "question": "How many bits are in an IPv4 address?", "options": ["32", "48", "64", "128"], "answer": 0, "explanation": "IPv4 addresses are 32 bits long."}, 
+    {"category": "IP Addressing", "question": "How many octets are in an IPv4 address?", "options": ["4", "2", "6", "8"], "answer": 0, "explanation": "IPv4 has four 8-bit octets."}, 
+    {"category": "IP Addressing", "question": "What is the valid range of a single IPv4 octet?", "options": ["0 to 255", "1 to 255", "0 to 1024", "-255 to 255"], "answer": 0, "explanation": "Each IPv4 octet is 8 bits, so its decimal range is 0 to 255."}, 
+    {"category": "IP Addressing", "question": "Which of the following is a valid IPv4 address?", "options": ["192.168.1.10", "192.168.500.1", "10.0.0", "300.1.1.1"], "answer": 0, "explanation": "192.168.1.10 is valid because it has four octets each between 0 and 255."}, 
+    {"category": "IP Addressing", "question": "How many bits are in an IPv6 address?", "options": ["128", "64", "32", "48"], "answer": 0, "explanation": "IPv6 addresses are 128 bits long."}, 
+    {"category": "IP Addressing", "question": "IPv6 addresses are usually written in which number base?", "options": ["Hexadecimal", "Binary only", "Decimal only", "Octal"], "answer": 0, "explanation": "IPv6 addresses are commonly written in hexadecimal groups."}, 
+    {"category": "IP Addressing", "question": "Which of the following is an example of an IPv6 address?", "options": ["2001:db8::1", "192.168.1.1", "10.10.10.10", "255.255.255.0"], "answer": 0, "explanation": "2001:db8::1 is a valid IPv6 documentation-format example."}, 
+    {"category": "IP Addressing", "question": "What does a subnet mask do?", "options": ["It identifies which part of an IPv4 address is network and which part is host", "It encrypts traffic", "It assigns MAC addresses", "It creates VLANs"], "answer": 0, "explanation": "A subnet mask separates the network portion from the host portion of an IPv4 address."}, 
+    {"category": "IP Addressing", "question": "What does CIDR notation /24 mean?", "options": ["The first 24 bits are the network prefix", "There are 24 octets", "The host part has 24 bits", "There are 24 networks"], "answer": 0, "explanation": "A /24 prefix means 24 bits are used for the network portion."}, 
+    {"category": "IP Addressing", "question": "What subnet mask corresponds to /24?", "options": ["255.255.255.0", "255.255.0.0", "255.0.0.0", "255.255.255.128"], "answer": 0, "explanation": "/24 corresponds to 255.255.255.0."}, 
+    {"category": "IP Addressing", "question": "What subnet mask corresponds to /16?", "options": ["255.255.0.0", "255.255.255.0", "255.0.0.0", "255.255.255.240"], "answer": 0, "explanation": "/16 corresponds to 255.255.0.0."}, 
+    {"category": "IP Addressing", "question": "What subnet mask corresponds to /8?", "options": ["255.0.0.0", "255.255.0.0", "255.255.255.0", "255.255.255.252"], "answer": 0, "explanation": "/8 corresponds to 255.0.0.0."}, 
+    {"category": "IP Addressing", "question": "Which address is in the private IPv4 range?", "options": ["192.168.10.5", "8.8.8.8", "1.1.1.1", "172.40.1.1"], "answer": 0, "explanation": "192.168.0.0/16 is a private IPv4 range."}, 
+    {"category": "IP Addressing", "question": "Which address is in the private IPv4 range?", "options": ["10.1.2.3", "11.1.2.3", "100.64.0.1", "169.254.1.1"], "answer": 0, "explanation": "10.0.0.0/8 is private."}, 
+    {"category": "IP Addressing", "question": "Which address is in the private IPv4 range?", "options": ["172.16.5.5", "172.15.5.5", "172.32.5.5", "173.16.5.5"], "answer": 0, "explanation": "172.16.0.0 through 172.31.255.255 is private."}, 
+    {"category": "IP Addressing", "question": "Which of the following is a public IPv4 address?", "options": ["8.8.8.8", "10.10.10.10", "192.168.1.1", "172.16.1.1"], "answer": 0, "explanation": "8.8.8.8 is publicly routable."}, 
+    {"category": "IP Addressing", "question": "What is APIPA in IPv4?", "options": ["Automatic addressing in the 169.254.0.0/16 range when DHCP fails", "A DNS zone type", "A VLAN tagging method", "A routing protocol"], "answer": 0, "explanation": "APIPA self-assigns a link-local address when DHCP is unavailable."}, 
+    {"category": "IP Addressing", "question": "Which range is used by APIPA?", "options": ["169.254.0.0/16", "127.0.0.0/8", "224.0.0.0/4", "192.168.0.0/16"], "answer": 0, "explanation": "APIPA uses 169.254.0.0/16."}, 
+    {"category": "IP Addressing", "question": "What is the IPv4 loopback address most commonly used for local testing?", "options": ["127.0.0.1", "0.0.0.0", "255.255.255.255", "169.254.1.1"], "answer": 0, "explanation": "127.0.0.1 is the standard loopback address."}, 
+    {"category": "IP Addressing", "question": "What does 0.0.0.0 commonly mean on a host?", "options": ["An unspecified or any-address context", "The loopback address", "A broadcast address", "A public address"], "answer": 0, "explanation": "0.0.0.0 often means unspecified or all addresses depending on context."}, 
+    {"category": "IP Addressing", "question": "What is the limited broadcast address in IPv4?", "options": ["255.255.255.255", "127.0.0.1", "0.0.0.0", "224.0.0.1"], "answer": 0, "explanation": "255.255.255.255 is the local broadcast address."}, 
+    {"category": "IP Addressing", "question": "Which classful default mask was associated with Class A?", "options": ["255.0.0.0", "255.255.0.0", "255.255.255.0", "255.255.255.128"], "answer": 0, "explanation": "In old classful addressing, Class A used 255.0.0.0."}, 
+    {"category": "IP Addressing", "question": "Which classful default mask was associated with Class B?", "options": ["255.255.0.0", "255.0.0.0", "255.255.255.0", "255.255.240.0"], "answer": 0, "explanation": "Class B used 255.255.0.0."}, 
+    {"category": "IP Addressing", "question": "Which classful default mask was associated with Class C?", "options": ["255.255.255.0", "255.255.0.0", "255.0.0.0", "255.255.255.252"], "answer": 0, "explanation": "Class C used 255.255.255.0."}, 
+    {"category": "IP Addressing", "question": "What is the network address used for in a subnet?", "options": ["It identifies the subnet itself", "It is assigned to a normal host", "It is the default gateway by rule", "It is used as a MAC address"], "answer": 0, "explanation": "The network address identifies the subnet and is not assigned to a host."}, 
+    {"category": "IP Addressing", "question": "What is the broadcast address used for in a subnet?", "options": ["It reaches all hosts in that subnet", "It identifies only the gateway", "It is assigned to the first host", "It is a routing metric"], "answer": 0, "explanation": "The broadcast address sends traffic to all hosts in the subnet."}, 
+    {"category": "IP Addressing", "question": "In a /24 subnet such as 192.168.1.0/24, what is the usual broadcast address?", "options": ["192.168.1.255", "192.168.1.0", "192.168.1.1", "192.168.255.255"], "answer": 0, "explanation": "In a /24, the last address is the broadcast address."}, 
+    {"category": "IP Addressing", "question": "In 192.168.1.0/24, which is a valid usable host address?", "options": ["192.168.1.10", "192.168.1.0", "192.168.1.255", "192.168.1.256"], "answer": 0, "explanation": "Usable host addresses are between the network and broadcast addresses."}, 
+    {"category": "IP Addressing", "question": "How many usable host addresses are in a /24 subnet?", "options": ["254", "256", "255", "253"], "answer": 0, "explanation": "A /24 has 256 total addresses, minus network and broadcast, leaving 254 usable in traditional IPv4 subnetting."}, 
+    {"category": "IP Addressing", "question": "How many total addresses are in a /24 subnet?", "options": ["256", "254", "512", "128"], "answer": 0, "explanation": "A /24 leaves 8 host bits, so 2^8 = 256 total addresses."}, 
+    {"category": "IP Addressing", "question": "How many total addresses are in a /30 subnet?", "options": ["4", "2", "8", "16"], "answer": 0, "explanation": "A /30 has 2 host bits, so 4 total addresses."}, 
+    {"category": "IP Addressing", "question": "How many usable host addresses are in a traditional /30 subnet?", "options": ["2", "4", "1", "6"], "answer": 0, "explanation": "A traditional /30 provides 2 usable host addresses."}, 
+    {"category": "IP Addressing", "question": "What subnet mask corresponds to /30?", "options": ["255.255.255.252", "255.255.255.248", "255.255.255.240", "255.255.255.0"], "answer": 0, "explanation": "/30 corresponds to 255.255.255.252."}, 
+    {"category": "IP Addressing", "question": "What subnet mask corresponds to /26?", "options": ["255.255.255.192", "255.255.255.224", "255.255.255.128", "255.255.255.240"], "answer": 0, "explanation": "/26 corresponds to 255.255.255.192."}, 
+    {"category": "IP Addressing", "question": "How many usable host addresses are in a /26 subnet?", "options": ["62", "64", "30", "126"], "answer": 0, "explanation": "A /26 has 64 total addresses and 62 usable in traditional IPv4 subnetting."}, 
+    {"category": "IP Addressing", "question": "How many usable host addresses are in a /25 subnet?", "options": ["126", "128", "254", "62"], "answer": 0, "explanation": "A /25 has 128 total addresses and 126 usable."}, 
+    {"category": "IP Addressing", "question": "What subnet mask corresponds to /25?", "options": ["255.255.255.128", "255.255.255.192", "255.255.255.0", "255.255.255.224"], "answer": 0, "explanation": "/25 corresponds to 255.255.255.128."}, 
+    {"category": "IP Addressing", "question": "How many total addresses are in a /29 subnet?", "options": ["8", "6", "16", "4"], "answer": 0, "explanation": "A /29 has 3 host bits, which gives 8 total addresses."}, 
+    {"category": "IP Addressing", "question": "How many usable host addresses are in a traditional /29 subnet?", "options": ["6", "8", "4", "14"], "answer": 0, "explanation": "A /29 has 8 total addresses and 6 usable."}, 
+    {"category": "IP Addressing", "question": "What subnet mask corresponds to /29?", "options": ["255.255.255.248", "255.255.255.252", "255.255.255.240", "255.255.255.224"], "answer": 0, "explanation": "/29 corresponds to 255.255.255.248."}, 
+    {"category": "IP Addressing", "question": "What subnet mask corresponds to /27?", "options": ["255.255.255.224", "255.255.255.240", "255.255.255.192", "255.255.255.128"], "answer": 0, "explanation": "/27 corresponds to 255.255.255.224."}, 
+    {"category": "IP Addressing", "question": "How many usable host addresses are in a /27 subnet?", "options": ["30", "32", "62", "14"], "answer": 0, "explanation": "A /27 has 32 total addresses and 30 usable."}, 
+    {"category": "IP Addressing", "question": "What is route summarization?", "options": ["Combining multiple networks into a larger advertised prefix", "Splitting one network into smaller ones", "Encrypting routes", "Removing default routes"], "answer": 0, "explanation": "Route summarization reduces routing table entries by aggregating prefixes."}, 
+    {"category": "IP Addressing", "question": "What is subnetting?", "options": ["Dividing a larger network into smaller logical networks", "Combining networks into one big host", "Converting MAC to IP", "Replacing DNS"], "answer": 0, "explanation": "Subnetting breaks a network into smaller logical segments."}, 
+    {"category": "IP Addressing", "question": "What is the main benefit of subnetting?", "options": ["Better address management and reduced broadcast scope", "It removes the need for routing", "It eliminates MAC addresses", "It makes all traffic encrypted"], "answer": 0, "explanation": "Subnetting improves organization, efficiency, and control of broadcast size."}, 
+    {"category": "IP Addressing", "question": "Which statement about IPv6 is accurate?", "options": ["IPv6 was designed to provide a much larger address space than IPv4", "IPv6 uses 32-bit addresses", "IPv6 cannot be routed", "IPv6 replaces MAC addresses"], "answer": 0, "explanation": "IPv6 greatly expands the available address space."}, 
+    {"category": "IP Addressing", "question": "What is the IPv6 loopback address?", "options": ["::1", "::", "2001:db8::1", "fe80::1"], "answer": 0, "explanation": "::1 is the IPv6 loopback address."}, 
+    {"category": "IP Addressing", "question": "What does :: represent in IPv6 in some contexts?", "options": ["Compressed consecutive zeros", "A broadcast address", "A MAC address", "A VLAN"], "answer": 0, "explanation": "Double colon is used once in an IPv6 address to compress consecutive zero groups."}, 
+    {"category": "IP Addressing", "question": "Which IPv6 addresses are link-local?", "options": ["Addresses starting with fe80::/10", "Addresses starting with 2000::/3", "Addresses starting with ::1/128", "Addresses starting with fc00::/7"], "answer": 0, "explanation": "fe80::/10 is used for IPv6 link-local addresses."}, 
+    {"category": "IP Addressing", "question": "Which IPv6 range is used for unique local addresses?", "options": ["fc00::/7", "fe80::/10", "2000::/3", "ff00::/8"], "answer": 0, "explanation": "fc00::/7 covers unique local addresses."}, 
+    {"category": "IP Addressing", "question": "Which IPv6 range is used for multicast?", "options": ["ff00::/8", "fe80::/10", "fc00::/7", "2001:db8::/32"], "answer": 0, "explanation": "IPv6 multicast addresses begin with ff."}, 
+    {"category": "IP Addressing", "question": "Does IPv6 use broadcast the same way IPv4 does?", "options": ["No, IPv6 generally uses multicast instead of broadcast", "Yes, every subnet has the same broadcast address", "Only routers use broadcast in IPv6", "Only DNS uses broadcast in IPv6"], "answer": 0, "explanation": "IPv6 does not rely on broadcast like IPv4; it uses multicast and other mechanisms."}, 
+    {"category": "IP Addressing", "question": "What is the main purpose of a default gateway on a host?", "options": ["To send traffic to destinations outside the local subnet", "To replace the subnet mask", "To assign MAC addresses", "To create application sessions"], "answer": 0, "explanation": "The default gateway is used for off-subnet traffic."}, 
+    {"category": "IP Addressing", "question": "Which device is commonly the default gateway for hosts on a subnet?", "options": ["A router interface or Layer 3 switch SVI", "A hub port", "A patch panel", "A monitor"], "answer": 0, "explanation": "The default gateway is typically a router interface or a Layer 3 switch virtual interface."}, 
+    {"category": "IP Addressing", "question": "What are source and destination IP addresses used for?", "options": ["Identifying the sender and intended receiver at Layer 3", "Identifying cable color", "Selecting monitor brightness", "Naming VLANs"], "answer": 0, "explanation": "Source and destination IPs identify communicating endpoints at Layer 3."}, 
+    {"category": "IP Addressing", "question": "Which statement is correct about public and private IPv4 addresses?", "options": ["Private addresses are not directly routable on the public internet", "Public addresses cannot be routed", "Private addresses are only used by switches", "Public addresses always start with 192.168"], "answer": 0, "explanation": "Private IPv4 ranges are meant for internal use and are not publicly routable."}, 
+    {"category": "IP Addressing", "question": "What is the purpose of DNS in relation to IP addressing?", "options": ["It resolves human-readable names to IP addresses", "It replaces default gateways", "It rewrites MAC addresses", "It performs NAT"], "answer": 0, "explanation": "DNS maps names such as example.com to IP addresses."}, 
+    {"category": "IP Addressing", "question": "What is the purpose of NAT in relation to private IPv4 addressing?", "options": ["It allows private-addressed hosts to communicate externally using translated addresses", "It removes the need for IP addresses", "It turns a switch into a router", "It disables DNS"], "answer": 0, "explanation": "NAT commonly translates internal private addresses when accessing external networks."}, 
+    {"category": "Ethernet & MAC", "question": "What is a MAC address?", "options": ["A Layer 2 hardware address used on local networks", "A Layer 3 logical address", "A transport port number", "A DNS record"], "answer": 0, "explanation": "MAC addresses identify interfaces at Layer 2."}, 
+    {"category": "Ethernet & MAC", "question": "How many bits are in a MAC address?", "options": ["48", "32", "64", "128"], "answer": 0, "explanation": "A MAC address is 48 bits."}, 
+    {"category": "Ethernet & MAC", "question": "How many bytes are in a MAC address?", "options": ["6", "4", "8", "16"], "answer": 0, "explanation": "48 bits equals 6 bytes."}, 
+    {"category": "Ethernet & MAC", "question": "What does MAC stand for?", "options": ["Media Access Control", "Managed Address Class", "Multi Access Circuit", "Master Address Control"], "answer": 0, "explanation": "MAC stands for Media Access Control."}, 
+    {"category": "Ethernet & MAC", "question": "What is an OUI in a MAC address?", "options": ["The vendor portion, usually the first 24 bits", "The last 8 bits only", "The subnet mask portion", "The IP gateway portion"], "answer": 0, "explanation": "The OUI identifies the manufacturer and is usually the first 24 bits."}, 
+    {"category": "Ethernet & MAC", "question": "What is another term for a factory-set MAC address?", "options": ["Burned-In Address", "Subnet ID", "Lease address", "Loopback ID"], "answer": 0, "explanation": "A manufacturer-assigned MAC is often called a Burned-In Address."}, 
+    {"category": "Ethernet & MAC", "question": "Which field in an Ethernet frame comes first before destination and source MAC addresses on the wire?", "options": ["Preamble and SFD", "FCS", "Payload", "IP header"], "answer": 0, "explanation": "The preamble and SFD are transmitted first to prepare the receiver."}, 
+    {"category": "Ethernet & MAC", "question": "How long is the Ethernet preamble?", "options": ["7 bytes", "1 byte", "4 bytes", "8 bytes"], "answer": 0, "explanation": "The preamble is 7 bytes."}, 
+    {"category": "Ethernet & MAC", "question": "How long is the Start Frame Delimiter?", "options": ["1 byte", "7 bytes", "2 bytes", "4 bytes"], "answer": 0, "explanation": "The SFD is 1 byte."}, 
+    {"category": "Ethernet & MAC", "question": "What is the purpose of the Ethernet preamble?", "options": ["To synchronize receiver clocks", "To store the IP address", "To identify the VLAN", "To assign an MTU"], "answer": 0, "explanation": "The preamble provides a synchronization pattern."}, 
+    {"category": "Ethernet & MAC", "question": "What is the purpose of the SFD?", "options": ["To mark the start of the frame after the preamble", "To end the frame", "To replace the FCS", "To assign a MAC"], "answer": 0, "explanation": "The SFD marks where the actual frame begins."}, 
+    {"category": "Ethernet & MAC", "question": "How long is the destination MAC field in Ethernet?", "options": ["6 bytes", "4 bytes", "2 bytes", "8 bytes"], "answer": 0, "explanation": "The destination MAC field is 6 bytes."}, 
+    {"category": "Ethernet & MAC", "question": "How long is the source MAC field in Ethernet?", "options": ["6 bytes", "4 bytes", "2 bytes", "8 bytes"], "answer": 0, "explanation": "The source MAC field is 6 bytes."}, 
+    {"category": "Ethernet & MAC", "question": "How long is the EtherType/Length field?", "options": ["2 bytes", "4 bytes", "6 bytes", "1 byte"], "answer": 0, "explanation": "The Type/Length field is 2 bytes."}, 
+    {"category": "Ethernet & MAC", "question": "How long is the FCS field?", "options": ["4 bytes", "2 bytes", "6 bytes", "1 byte"], "answer": 0, "explanation": "The Frame Check Sequence is 4 bytes."}, 
+    {"category": "Ethernet & MAC", "question": "What does FCS stand for?", "options": ["Frame Check Sequence", "Forwarding Control Service", "Fast Circuit Switch", "Frame Conversion Signal"], "answer": 0, "explanation": "FCS stands for Frame Check Sequence."}, 
+    {"category": "Ethernet & MAC", "question": "What is the purpose of FCS?", "options": ["To detect frame corruption using an error-check value", "To assign VLAN IDs", "To perform DNS lookups", "To set duplex"], "answer": 0, "explanation": "The FCS helps detect transmission errors."}, 
+    {"category": "Ethernet & MAC", "question": "Which algorithm is commonly associated with Ethernet FCS?", "options": ["CRC", "AES", "RSA", "MD5 only"], "answer": 0, "explanation": "Ethernet FCS is based on a CRC value."}, 
+    {"category": "Ethernet & MAC", "question": "What does CRC stand for?", "options": ["Cyclic Redundancy Check", "Circuit Routing Control", "Common Redirection Code", "Channel Response Count"], "answer": 0, "explanation": "CRC stands for Cyclic Redundancy Check."}, 
+    {"category": "Ethernet & MAC", "question": "Which address type does a switch learn to build its forwarding table?", "options": ["MAC addresses", "IP routes", "DNS names", "Port numbers"], "answer": 0, "explanation": "Switches learn source MAC addresses on incoming ports."}, 
+    {"category": "Ethernet & MAC", "question": "What table does a switch use to forward frames intelligently?", "options": ["MAC address table", "ARP cache only", "Routing table", "NAT table"], "answer": 0, "explanation": "A switch uses its MAC address table, also called a CAM table."}, 
+    {"category": "Ethernet & MAC", "question": "When a switch receives a frame with an unknown destination MAC, what does it usually do within the VLAN?", "options": ["Floods it out all other relevant ports", "Drops it immediately", "Routes it to the internet", "Changes the source MAC"], "answer": 0, "explanation": "Unknown unicast traffic is usually flooded within the VLAN, except the incoming port."}, 
+    {"category": "Ethernet & MAC", "question": "When a switch receives a broadcast frame, what does it usually do within the VLAN?", "options": ["Floods it out all other ports in that VLAN", "Routes it to all VLANs", "Drops it", "Encrypts it"], "answer": 0, "explanation": "Broadcasts are flooded within the broadcast domain or VLAN."}, 
+    {"category": "Ethernet & MAC", "question": "What is ARP used for in IPv4?", "options": ["Resolving an IPv4 address to a MAC address on the local network", "Assigning IPv6 prefixes", "Encrypting frames", "Replacing DNS"], "answer": 0, "explanation": "ARP maps local IPv4 addresses to MAC addresses."}, 
+    {"category": "Ethernet & MAC", "question": "If a host wants to send to another host in the same subnet, what MAC address does it usually need?", "options": ["The destination host's MAC address", "The ISP router's MAC only", "Any random MAC", "The DNS server MAC"], "answer": 0, "explanation": "For same-subnet delivery, the sender needs the target host's MAC."}, 
+    {"category": "Ethernet & MAC", "question": "If a host wants to send to a remote subnet, what MAC address does it usually use as the destination in the local Ethernet frame?", "options": ["The default gateway's MAC address", "The remote host's MAC", "A broadcast MAC forever", "Its own MAC"], "answer": 0, "explanation": "For off-subnet traffic, the host sends the frame to the default gateway's MAC."}, 
+    {"category": "Ethernet & MAC", "question": "What is the IPv4 broadcast MAC destination often represented as?", "options": ["ff:ff:ff:ff:ff:ff", "00:00:00:00:00:00", "01:00:5e:00:00:01", "fe:80:00:00:00:01"], "answer": 0, "explanation": "The all-ones MAC address is the Layer 2 broadcast destination."}, 
+    {"category": "Ethernet & MAC", "question": "What is a unicast MAC address?", "options": ["A MAC that identifies a single interface", "A MAC for all devices", "A MAC for a group only", "A missing address"], "answer": 0, "explanation": "Unicast MAC addresses identify a single destination interface."}, 
+    {"category": "Ethernet & MAC", "question": "What does MTU stand for?", "options": ["Maximum Transmission Unit", "Managed Transfer Utility", "Maximum Tagged Uplink", "Media Transport Unit"], "answer": 0, "explanation": "MTU is the maximum payload size a frame can carry without fragmentation at Layer 3."}, 
+    {"category": "Ethernet & MAC", "question": "What is the common Ethernet MTU for IPv4 payloads on standard networks?", "options": ["1500 bytes", "9000 bytes", "512 bytes", "64 bytes"], "answer": 0, "explanation": "Standard Ethernet commonly uses an MTU of 1500 bytes."}, 
+    {"category": "Ethernet & MAC", "question": "What are jumbo frames?", "options": ["Ethernet frames using a larger-than-standard MTU", "Broadcast-only frames", "Frames without FCS", "Frames used only by hubs"], "answer": 0, "explanation": "Jumbo frames use a larger MTU, commonly around 9000 bytes depending on network support."}, 
+    {"category": "Ethernet & MAC", "question": "What is duplex mismatch likely to cause?", "options": ["Poor performance and errors", "More available IPs", "Better broadcast control", "Automatic VLAN creation"], "answer": 0, "explanation": "Duplex mismatches can cause collisions, late collisions, and poor performance."}, 
+    {"category": "Ethernet & MAC", "question": "Which device operates at Layer 1 and simply repeats electrical or optical signals?", "options": ["Repeater", "Bridge", "Router", "Layer 3 switch"], "answer": 0, "explanation": "A repeater operates at the Physical layer."}, 
+    {"category": "Ethernet & MAC", "question": "Which device is a Layer 2 forwarding device that uses MAC addresses?", "options": ["Bridge", "Repeater", "Hub", "Modem"], "answer": 0, "explanation": "A bridge forwards or filters frames using MAC addresses."}, 
+    {"category": "Ethernet & MAC", "question": "How is a bridge different from a repeater?", "options": ["A bridge understands Layer 2 addresses; a repeater does not", "A repeater routes by IP; a bridge does not", "A bridge assigns IP addresses", "A repeater creates VLANs"], "answer": 0, "explanation": "A repeater only regenerates signals, while a bridge makes Layer 2 forwarding decisions."}, 
+    {"category": "Ethernet & MAC", "question": "What is a collision in Ethernet?", "options": ["Two devices transmitting at the same time on a shared medium", "A DNS resolution failure", "A mismatch of subnet masks", "A power issue"], "answer": 0, "explanation": "Collisions happen in shared-media environments when transmissions overlap."}, 
+    {"category": "Ethernet & MAC", "question": "Which old Ethernet access method handled collisions on shared media?", "options": ["CSMA/CD", "OSPF", "ARP", "PPP"], "answer": 0, "explanation": "Classic shared Ethernet used CSMA/CD."}, 
+    {"category": "Ethernet & MAC", "question": "What does CSMA/CD stand for?", "options": ["Carrier Sense Multiple Access with Collision Detection", "Central Switch Managed Access with Circuit Distribution", "Carrier Service Media Access with Collision Division", "Controlled Signal Management and Collision Defense"], "answer": 0, "explanation": "CSMA/CD is the classic shared-Ethernet collision handling method."}, 
+    {"category": "Ethernet & MAC", "question": "On modern switched full-duplex Ethernet, collisions are generally:", "options": ["Not expected during normal operation", "Common on every link", "Required for ARP", "Used for VLAN tagging"], "answer": 0, "explanation": "Full-duplex switched Ethernet eliminates normal collisions."}, 
+    {"category": "Ethernet & MAC", "question": "What is the minimum Ethernet frame size excluding preamble and SFD?", "options": ["64 bytes", "46 bytes", "1518 bytes", "60 bytes"], "answer": 0, "explanation": "The minimum Ethernet frame size is 64 bytes from destination MAC through FCS."}, 
+    {"category": "Ethernet & MAC", "question": "What is the main reason for the Ethernet minimum frame size historically?", "options": ["To allow collision detection on shared media", "To fit an IP header exactly", "To match DNS packet size", "To support only fiber"], "answer": 0, "explanation": "The minimum size helped ensure collisions could be detected on shared Ethernet."}, 
+    {"category": "Ethernet & MAC", "question": "What is padding in Ethernet?", "options": ["Extra bytes added so a frame meets the minimum size", "Encryption data", "A VLAN trailer", "A type of CRC"], "answer": 0, "explanation": "Padding ensures short payloads still meet the minimum Ethernet frame size."}, 
+    {"category": "Ethernet & MAC", "question": "Which field identifies the sender in an Ethernet frame?", "options": ["Source MAC address", "Destination IP address", "Default gateway", "Port number"], "answer": 0, "explanation": "The source MAC identifies the sending interface."}, 
+    {"category": "Ethernet & MAC", "question": "Which field identifies the intended receiver in an Ethernet frame?", "options": ["Destination MAC address", "Source IP address", "Subnet mask", "VLAN database"], "answer": 0, "explanation": "The destination MAC identifies the local Layer 2 destination."}, 
+    {"category": "Ethernet & MAC", "question": "What does ARP stand for?", "options": ["Address Resolution Protocol", "Automatic Routing Process", "Access Relay Protocol", "Address Routing Procedure"], "answer": 0, "explanation": "ARP means Address Resolution Protocol."}, 
+    {"category": "Switching & VLAN", "question": "What is a VLAN?", "options": ["A logical Layer 2 segmentation of a network", "A physical cable standard", "A DNS zone", "A routing algorithm"], "answer": 0, "explanation": "A VLAN is a virtual LAN that logically separates Layer 2 domains."}, 
+    {"category": "Switching & VLAN", "question": "What is a major benefit of VLANs?", "options": ["They separate broadcast domains logically", "They eliminate IP addressing", "They replace switches with hubs", "They make all hosts public"], "answer": 0, "explanation": "VLANs reduce broadcast scope and improve segmentation."}, 
+    {"category": "Switching & VLAN", "question": "Where are VLANs typically configured?", "options": ["On managed switches", "On patch panels", "On monitors", "On cables"], "answer": 0, "explanation": "Managed switches usually create and manage VLANs."}, 
+    {"category": "Switching & VLAN", "question": "Are VLANs physical or logical segmentation?", "options": ["Logical segmentation", "Physical segmentation only", "A power feature", "A wireless-only feature"], "answer": 0, "explanation": "VLANs provide logical segmentation, not physical separation by themselves."}, 
+    {"category": "Switching & VLAN", "question": "Which IEEE standard defines common VLAN tagging on Ethernet?", "options": ["802.1Q", "802.3af", "802.11ax", "802.1X"], "answer": 0, "explanation": "802.1Q is the common VLAN tagging standard."}, 
+    {"category": "Switching & VLAN", "question": "What is an access port?", "options": ["A switch port that carries traffic for typically one VLAN for an end device", "A routed port only", "A port that carries all VLANs tagged to another switch", "A console-only port"], "answer": 0, "explanation": "Access ports connect end devices and usually belong to one VLAN."}, 
+    {"category": "Switching & VLAN", "question": "What is a trunk port?", "options": ["A port that carries multiple VLANs between networking devices", "A port that carries only one VLAN to a PC", "A power-only port", "A port used only for ARP"], "answer": 0, "explanation": "Trunk ports carry traffic for multiple VLANs, typically between switches or to routers/firewalls."}, 
+    {"category": "Switching & VLAN", "question": "What does an 802.1Q tag do?", "options": ["It identifies the VLAN of an Ethernet frame on a trunk", "It assigns an IP address", "It replaces the MAC address", "It performs NAT"], "answer": 0, "explanation": "802.1Q tagging marks the VLAN associated with a frame on a trunk."}, 
+    {"category": "Switching & VLAN", "question": "What is the native VLAN on an 802.1Q trunk by default on many Cisco switches?", "options": ["VLAN 1", "VLAN 0", "VLAN 100", "VLAN 4094"], "answer": 0, "explanation": "On many Cisco devices, VLAN 1 is the default native VLAN unless changed."}, 
+    {"category": "Switching & VLAN", "question": "Which traffic is typically untagged on a native VLAN on a standard 802.1Q trunk?", "options": ["Native VLAN traffic", "All VLAN traffic", "Only management VLAN traffic", "Only voice VLAN traffic"], "answer": 0, "explanation": "Native VLAN traffic is typically sent untagged unless configured otherwise."}, 
+    {"category": "Switching & VLAN", "question": "What is inter-VLAN routing?", "options": ["Routing traffic between different VLANs", "Switching within one VLAN only", "Assigning VLAN IDs automatically", "Encrypting VLAN tags"], "answer": 0, "explanation": "Inter-VLAN routing allows communication between separate VLANs."}, 
+    {"category": "Switching & VLAN", "question": "Which device can perform inter-VLAN routing directly?", "options": ["Layer 3 switch", "Hub", "Repeater", "Patch panel"], "answer": 0, "explanation": "A Layer 3 switch can route between VLANs using SVIs or routed interfaces."}, 
+    {"category": "Switching & VLAN", "question": "What does SVI stand for?", "options": ["Switch Virtual Interface", "Static VLAN Internet", "Subnet Virtual Identifier", "Switch Variable Index"], "answer": 0, "explanation": "SVI stands for Switch Virtual Interface."}, 
+    {"category": "Switching & VLAN", "question": "What is an SVI commonly used for?", "options": ["Providing a Layer 3 interface for a VLAN", "Repeating signals", "Replacing the MAC table", "Creating a preamble"], "answer": 0, "explanation": "An SVI gives a VLAN a Layer 3 gateway interface."}, 
+    {"category": "Switching & VLAN", "question": "If two hosts are in different VLANs, what do they need to communicate?", "options": ["A Layer 3 device or inter-VLAN routing", "Only a hub", "No gateway is needed", "A crossover cable only"], "answer": 0, "explanation": "Different VLANs are different Layer 2 domains and require Layer 3 routing to communicate."}, 
+    {"category": "Switching & VLAN", "question": "Which statement about subnets and VLANs is accurate?", "options": ["Subnets are Layer 3 logical divisions; VLANs are Layer 2 logical divisions", "VLANs are physical and subnets are electrical", "They are exactly the same concept", "Subnets only exist on routers and VLANs only on cables"], "answer": 0, "explanation": "Subnets and VLANs are related but belong to different layers."}, 
+    {"category": "Switching & VLAN", "question": "What is a voice VLAN commonly used for?", "options": ["Separating IP phone traffic from data traffic", "Replacing DHCP", "Encrypting all calls automatically", "Disabling PoE"], "answer": 0, "explanation": "Voice VLANs help segment phone traffic and often support QoS policies."}, 
+    {"category": "Switching & VLAN", "question": "What is the default VLAN on many Cisco switches out of the box?", "options": ["VLAN 1", "VLAN 0", "VLAN 100", "VLAN 4095"], "answer": 0, "explanation": "VLAN 1 is commonly the default VLAN."}, 
+    {"category": "Switching & VLAN", "question": "What is a MAC address table aging timer used for?", "options": ["Removing stale learned MAC entries after inactivity", "Assigning DHCP leases", "Changing VLAN IDs", "Encrypting frame payloads"], "answer": 0, "explanation": "Aging prevents old or moved MAC entries from remaining forever."}, 
+    {"category": "Switching & VLAN", "question": "What causes a switch to learn a MAC address?", "options": ["Receiving a frame and recording the source MAC on the incoming port", "Seeing the destination MAC in ARP only", "Receiving a ping reply only", "Rebooting"], "answer": 0, "explanation": "Switches learn from source MAC addresses on incoming frames."}, 
+    {"category": "Switching & VLAN", "question": "What is a switch loop likely to cause if STP is not active?", "options": ["Broadcast storm and instability", "Faster routing", "Automatic NAT", "Less traffic"], "answer": 0, "explanation": "Loops can create broadcast storms and MAC table instability."}, 
+    {"category": "Switching & VLAN", "question": "What does STP stand for?", "options": ["Spanning Tree Protocol", "Switch Trunk Protocol", "Secure Transfer Protocol", "Static Tree Plan"], "answer": 0, "explanation": "STP stands for Spanning Tree Protocol."}, 
+    {"category": "Switching & VLAN", "question": "What is the purpose of STP?", "options": ["Prevent Layer 2 loops in switched networks", "Assign IP addresses", "Provide DNS resolution", "Encrypt switch configs"], "answer": 0, "explanation": "STP blocks redundant paths to avoid loops while preserving redundancy."}, 
+    {"category": "Switching & VLAN", "question": "What is a broadcast storm?", "options": ["Excessive broadcast traffic overwhelming the network", "A DNS timeout", "A single ping packet", "A type of routing update"], "answer": 0, "explanation": "Broadcast storms often result from Layer 2 loops."}, 
+    {"category": "Switching & VLAN", "question": "Which statement about hubs and switches is correct?", "options": ["A switch forwards intelligently using MAC addresses; a hub repeats to all ports", "A hub routes by IP and a switch does not", "A hub is always faster because it floods", "A switch is a Layer 1 device"], "answer": 0, "explanation": "Switches are smarter Layer 2 devices, while hubs repeat traffic."}, 
+    {"category": "Switching & VLAN", "question": "What is port security on a switch generally used for?", "options": ["Limiting which MAC addresses can use a switch port", "Assigning DNS servers", "Performing NAT", "Replacing routing"], "answer": 0, "explanation": "Port security helps control unauthorized device connections."}, 
+    {"category": "Switching & VLAN", "question": "What does a trunk between switches carry?", "options": ["Traffic for multiple VLANs", "Only one access VLAN", "Only Layer 3 routes", "Only ARP"], "answer": 0, "explanation": "Trunks transport multiple VLANs across one link."}, 
+    {"category": "Switching & VLAN", "question": "What is a management VLAN?", "options": ["A VLAN used for switch management traffic", "A VLAN that carries only DNS", "A VLAN that removes MAC addresses", "A VLAN used only by repeaters"], "answer": 0, "explanation": "A management VLAN is often used to reach switches for administration."}, 
+    {"category": "Switching & VLAN", "question": "What is the purpose of a default gateway on an SVI or routed interface for a switch doing Layer 3?", "options": ["To reach networks beyond directly connected ones", "To learn MAC addresses", "To replace STP", "To assign VLAN tags"], "answer": 0, "explanation": "Like any Layer 3 device, a switch needs routes or a default route to remote networks."}, 
+    {"category": "Switching & VLAN", "question": "Which command conceptually changes a switch port into a routed Layer 3 port on some multilayer switches?", "options": ["no switchport", "switchport trunk", "ip helper-address", "spanning-tree portfast"], "answer": 0, "explanation": "On many multilayer switches, 'no switchport' converts a port to Layer 3 routed mode."}, 
+    {"category": "Switching & VLAN", "question": "What is VTP?", "options": ["A Cisco protocol for distributing VLAN information", "A routing protocol", "A transport-layer protocol", "A DNS record type"], "answer": 0, "explanation": "VTP distributes VLAN information among switches in a Cisco environment."}, 
+    {"category": "Switching & VLAN", "question": "Why should VLAN changes with VTP be used carefully?", "options": ["Because incorrect changes can propagate widely", "Because VTP assigns IPs", "Because VTP is required for all switches", "Because it disables trunks"], "answer": 0, "explanation": "Poor VTP design or mistakes can affect many switches."}, 
+    {"category": "Switching & VLAN", "question": "What does PoE stand for?", "options": ["Power over Ethernet", "Protocol over Ethernet", "Port over Encryption", "Power on Endpoint"], "answer": 0, "explanation": "PoE delivers power over Ethernet cabling."}, 
+    {"category": "Switching & VLAN", "question": "Which device commonly benefits from PoE?", "options": ["IP phone", "Passive fiber patch", "Keyboard only", "Loopback interface"], "answer": 0, "explanation": "IP phones, access points, and cameras commonly use PoE."}, 
+    {"category": "Switching & VLAN", "question": "What is LLDP commonly used for?", "options": ["Link Layer Discovery between neighbors", "Routing internet traffic", "NAT translation", "DHCP lease management"], "answer": 0, "explanation": "LLDP helps neighboring devices advertise identity and capabilities."}, 
+    {"category": "Switching & VLAN", "question": "What is CDP?", "options": ["Cisco Discovery Protocol", "Common DHCP Process", "Client Data Path", "CRC Distribution Protocol"], "answer": 0, "explanation": "CDP is Cisco's proprietary discovery protocol."}, 
+    {"category": "Routing", "question": "What is a router?", "options": ["A Layer 3 device that forwards packets between networks", "A Layer 1 repeater", "A Layer 2 hub", "A cable tester"], "answer": 0, "explanation": "Routers connect networks and forward packets using IP information."}, 
+    {"category": "Routing", "question": "What does a routing table contain?", "options": ["Known destination networks and how to reach them", "Only MAC addresses", "Only DNS names", "Only VLAN IDs"], "answer": 0, "explanation": "The routing table lists routes and next-hop/outgoing interface information."}, 
+    {"category": "Routing", "question": "What is the default route often called?", "options": ["Gateway of last resort", "Native route", "Broadcast route", "MAC route"], "answer": 0, "explanation": "The default route is often called the gateway of last resort."}, 
+    {"category": "Routing", "question": "What destination prefix does the IPv4 default route use?", "options": ["0.0.0.0/0", "255.255.255.255/32", "127.0.0.0/8", "169.254.0.0/16"], "answer": 0, "explanation": "0.0.0.0/0 matches any destination not covered by a more specific route."}, 
+    {"category": "Routing", "question": "What is the IPv6 default route prefix?", "options": ["::/0", "::1/128", "fe80::/10", "ff00::/8"], "answer": 0, "explanation": "::/0 is the IPv6 default route."}, 
+    {"category": "Routing", "question": "What is a directly connected route?", "options": ["A route to a network attached to one of the router's interfaces", "A route learned from the internet", "A default route only", "A disabled route"], "answer": 0, "explanation": "Directly connected routes exist for networks configured on active interfaces."}, 
+    {"category": "Routing", "question": "What is a static route?", "options": ["A manually configured route", "A route learned automatically from a protocol", "A MAC address entry", "A DHCP reservation"], "answer": 0, "explanation": "Static routes are configured by an administrator."}, 
+    {"category": "Routing", "question": "What is a dynamic routing protocol used for?", "options": ["Automatically sharing routing information", "Assigning MAC addresses", "Creating VLANs", "Replacing ARP"], "answer": 0, "explanation": "Dynamic routing protocols exchange routes between routers."}, 
+    {"category": "Routing", "question": "Which of the following is a dynamic routing protocol?", "options": ["OSPF", "ARP", "DNS", "DHCP"], "answer": 0, "explanation": "OSPF is a dynamic routing protocol."}, 
+    {"category": "Routing", "question": "Which of the following is a dynamic routing protocol?", "options": ["EIGRP", "MAC", "NTP", "SSH"], "answer": 0, "explanation": "EIGRP is a routing protocol."}, 
+    {"category": "Routing", "question": "Which of the following is a dynamic routing protocol?", "options": ["RIP", "HTTPS", "SNMP", "Telnet"], "answer": 0, "explanation": "RIP is a routing protocol."}, 
+    {"category": "Routing", "question": "Which routing protocol is link-state?", "options": ["OSPF", "RIP", "Static routing", "ARP"], "answer": 0, "explanation": "OSPF is a link-state protocol."}, 
+    {"category": "Routing", "question": "Which routing protocol is distance-vector in its classic form?", "options": ["RIP", "OSPF", "BGP", "HSRP"], "answer": 0, "explanation": "RIP is a classic distance-vector protocol."}, 
+    {"category": "Routing", "question": "What metric does RIP primarily use?", "options": ["Hop count", "Bandwidth only", "Delay only", "Cost by MAC"], "answer": 0, "explanation": "RIP uses hop count as its metric."}, 
+    {"category": "Routing", "question": "What metric concept does OSPF use?", "options": ["Cost", "Hop count only", "TTL", "Preamble"], "answer": 0, "explanation": "OSPF uses a cost metric often based on bandwidth."}, 
+    {"category": "Routing", "question": "What is convergence in routing?", "options": ["The process of routers reaching a consistent view of the network", "Creating VLANs", "Assigning DHCP scopes", "Encrypting packets"], "answer": 0, "explanation": "Convergence means routers agree on the current topology."}, 
+    {"category": "Routing", "question": "What is a next hop?", "options": ["The next router or device used to move toward the destination", "The source host", "The MAC table", "A broadcast domain"], "answer": 0, "explanation": "The next hop is the next forwarding step toward a destination."}, 
+    {"category": "Routing", "question": "What is administrative distance?", "options": ["A value that rates the trustworthiness of a route source", "The physical distance to the next router", "The number of VLANs", "The ARP timeout"], "answer": 0, "explanation": "Administrative distance helps a router choose between routes from different sources."}, 
+    {"category": "Routing", "question": "On a router, which match wins when multiple routes exist?", "options": ["The longest prefix match", "The shortest interface name", "The oldest route", "The lowest VLAN number"], "answer": 0, "explanation": "Routers prefer the most specific route, which is the longest prefix match."}, 
+    {"category": "Routing", "question": "What is NAT?", "options": ["Network Address Translation", "Node Access Transfer", "New Address Transport", "Network Application Tunneling"], "answer": 0, "explanation": "NAT stands for Network Address Translation."}, 
+    {"category": "Routing", "question": "What is the main purpose of NAT in IPv4 networks?", "options": ["Translating addresses, often allowing private hosts to access external networks", "Assigning DNS names", "Replacing subnets", "Creating Ethernet frames"], "answer": 0, "explanation": "NAT commonly enables internal private hosts to share public connectivity."}, 
+    {"category": "Routing", "question": "What is source NAT (SNAT) generally used for?", "options": ["Changing the source address of outgoing traffic", "Changing the destination address of incoming traffic", "Creating VLAN tags", "Resolving hostnames"], "answer": 0, "explanation": "SNAT changes the source address, usually for outbound sessions."}, 
+    {"category": "Routing", "question": "What is destination NAT (DNAT) generally used for?", "options": ["Changing the destination address of inbound traffic", "Changing the source address of outbound traffic", "Disabling routing", "Encrypting packets"], "answer": 0, "explanation": "DNAT rewrites the destination, often for port forwarding."}, 
+    {"category": "Routing", "question": "What is static NAT?", "options": ["A fixed one-to-one mapping between addresses", "A routing protocol", "An ARP entry", "A DHCP relay"], "answer": 0, "explanation": "Static NAT maps one inside address to one outside address consistently."}, 
+    {"category": "Routing", "question": "What is PAT?", "options": ["Port Address Translation allowing many hosts to share one public IP using ports", "A spanning-tree feature", "A DNS option", "A duplex setting"], "answer": 0, "explanation": "PAT, often called NAT overload, uses ports to multiplex many sessions on one public IP."}, 
+    {"category": "Routing", "question": "What is port forwarding?", "options": ["Sending inbound traffic on a public address/port to an internal private host/port", "Sending traffic to all ports", "A form of VLAN tagging", "An OSPF metric"], "answer": 0, "explanation": "Port forwarding is a common DNAT use case."}, 
+    {"category": "Routing", "question": "Why is NAT not the same as a firewall?", "options": ["NAT changes addresses, while a firewall filters traffic based on policy", "NAT always blocks all inbound traffic", "Firewalls assign IPs and NAT does not", "They are identical"], "answer": 0, "explanation": "NAT and firewalling are different functions, though often on the same device."}, 
+    {"category": "Routing", "question": "What is DHCP?", "options": ["Dynamic Host Configuration Protocol", "Distributed Host Control Process", "Dynamic Host Connection Port", "Direct Host Communication Protocol"], "answer": 0, "explanation": "DHCP automatically assigns host network settings."}, 
+    {"category": "Routing", "question": "Which settings can DHCP provide?", "options": ["IP address, subnet mask, default gateway, DNS server", "Only MAC addresses", "Only VLANs", "Only hostnames"], "answer": 0, "explanation": "DHCP commonly provides those core network settings."}, 
+    {"category": "Routing", "question": "What is a DHCP lease?", "options": ["The time a client may use an assigned configuration", "A routing update", "A switch port mode", "An ARP table entry"], "answer": 0, "explanation": "A lease defines how long the client can keep the assigned address."}, 
+    {"category": "Routing", "question": "What is a DHCP scope or pool?", "options": ["The range of addresses and options available for assignment", "The routing table", "A MAC address list", "A VLAN trunk"], "answer": 0, "explanation": "A DHCP pool defines what can be handed out to clients."}, 
+    {"category": "Routing", "question": "What is a DHCP reservation?", "options": ["A fixed DHCP assignment for a specific client, often by MAC", "A routing metric", "A VLAN name", "A CRC entry"], "answer": 0, "explanation": "Reservations make a client receive the same address consistently from DHCP."}, 
+    {"category": "Routing", "question": "What is DHCP relay commonly used for?", "options": ["Forwarding DHCP requests between subnets to a remote DHCP server", "Translating MAC to IP", "Replacing DNS", "Disabling broadcasts"], "answer": 0, "explanation": "DHCP relay allows clients to use a DHCP server on another subnet."}, 
+    {"category": "Routing", "question": "What Cisco command is commonly used to configure a DHCP relay address on an interface?", "options": ["ip helper-address", "default-information originate", "service dhcp", "switchport trunk"], "answer": 0, "explanation": "'ip helper-address' forwards DHCP and certain UDP broadcasts to a server."}, 
+    {"category": "Routing", "question": "Why is DHCP relay needed?", "options": ["DHCP discovery is broadcast and routers do not forward broadcasts by default", "Routers cannot use IP addresses", "Switches block DNS", "ARP works only on WANs"], "answer": 0, "explanation": "Without a relay, local broadcasts stay within the broadcast domain."}, 
+    {"category": "Routing", "question": "What is DNS?", "options": ["Domain Name System", "Dynamic Network Service", "Default Node Switch", "Domain NAT Service"], "answer": 0, "explanation": "DNS stands for Domain Name System."}, 
+    {"category": "Routing", "question": "What is the main job of DNS?", "options": ["Resolve names to IP addresses and sometimes vice versa", "Assign MAC addresses", "Create VLAN trunks", "Replace routing"], "answer": 0, "explanation": "DNS translates names into IP addresses."}, 
+    {"category": "Routing", "question": "What is the default gateway on a host used for?", "options": ["Sending traffic to remote networks", "Learning local MAC addresses", "Configuring DHCP scopes", "Setting duplex"], "answer": 0, "explanation": "The default gateway is where off-subnet traffic is sent."}, 
+    {"category": "Routing", "question": "What is ICMP commonly used for?", "options": ["Error reporting and diagnostic messaging", "Transferring files", "Assigning IP addresses", "Encrypting sessions"], "answer": 0, "explanation": "ICMP supports diagnostics like ping and reports certain errors."}, 
+    {"category": "Routing", "question": "What command commonly uses ICMP echo requests?", "options": ["ping", "traceroute", "nslookup", "show ip route"], "answer": 0, "explanation": "Ping uses ICMP echo request and reply messages."}, 
+    {"category": "Routing", "question": "What does traceroute or tracert generally show?", "options": ["The path packets take through network hops", "Only the MAC address of the destination", "The DHCP lease time", "The switch MAC table"], "answer": 0, "explanation": "Traceroute reveals the path through routers."}, 
+    {"category": "Routing", "question": "What is a next-hop IP address in a static route?", "options": ["The immediate router toward the destination", "The final destination host only", "The source host", "The DNS server"], "answer": 0, "explanation": "The next hop is the neighbor router to forward traffic toward."}, 
+    {"category": "Routing", "question": "What does a modem do in basic terms?", "options": ["It modulates and demodulates signals for a service provider connection", "It switches frames by MAC", "It performs ARP", "It builds VLAN databases"], "answer": 0, "explanation": "A modem adapts signals for access technologies such as cable, DSL, or other media."}, 
+    {"category": "Routing", "question": "What is often combined in a home gateway device?", "options": ["Router, switch, Wi‑Fi access point, and often a modem", "Only a repeater", "Only a server", "Only a patch panel"], "answer": 0, "explanation": "Home gateways often bundle multiple functions."}, 
+    {"category": "Routing", "question": "What is a firewall?", "options": ["A device or software that filters traffic based on rules", "A Layer 1 repeater", "A DHCP-only server", "A MAC address table"], "answer": 0, "explanation": "Firewalls allow or block traffic according to policy."}, 
+    {"category": "Routing", "question": "What is stateful firewalling?", "options": ["Tracking connection state so return traffic can be handled intelligently", "Only blocking by MAC address", "Changing IP addresses automatically", "Providing DNS records"], "answer": 0, "explanation": "Stateful firewalls track established connections."}, 
+    {"category": "Routing", "question": "What is a VPN?", "options": ["A secure tunnel across another network such as the internet", "A VLAN over power", "A type of APIPA", "A DHCP option"], "answer": 0, "explanation": "A VPN creates a protected logical tunnel over an underlying network."}, 
+    {"category": "Routing", "question": "What is the benefit of a site-to-site VPN?", "options": ["It securely connects two networks over an untrusted network", "It replaces all routing", "It turns switches into hubs", "It assigns PoE"], "answer": 0, "explanation": "Site-to-site VPNs connect networks securely over the internet or other shared infrastructure."}, 
+    {"category": "Routing", "question": "What is the benefit of a remote-access VPN?", "options": ["It lets individual users securely connect to a private network", "It replaces DNS", "It is only for switches", "It removes authentication"], "answer": 0, "explanation": "Remote-access VPNs securely connect individual users."}, 
+    {"category": "Routing", "question": "What is a route table in cloud networking such as a VPC used for?", "options": ["Controlling where packets are sent next", "Assigning MAC addresses", "Configuring monitor settings", "Tagging VLAN frames"], "answer": 0, "explanation": "Cloud route tables guide traffic between subnets, gateways, and peers."}, 
+    {"category": "Transport", "question": "What is a port number used for?", "options": ["Identifying the application or service at the transport layer", "Identifying a switch VLAN", "Naming a MAC vendor", "Setting subnet masks"], "answer": 0, "explanation": "Port numbers identify services for TCP and UDP."}, 
+    {"category": "Transport", "question": "Which protocol provides reliable, connection-oriented delivery?", "options": ["TCP", "UDP", "IP", "ARP"], "answer": 0, "explanation": "TCP is reliable and connection-oriented."}, 
+    {"category": "Transport", "question": "Which protocol is connectionless and has lower overhead?", "options": ["UDP", "TCP", "ICMP", "ARP"], "answer": 0, "explanation": "UDP is connectionless and lightweight."}, 
+    {"category": "Transport", "question": "Which TCP flag is commonly used to begin a connection?", "options": ["SYN", "FIN", "RST", "PSH"], "answer": 0, "explanation": "TCP connection setup begins with SYN."}, 
+    {"category": "Transport", "question": "What is the classic TCP connection setup called?", "options": ["Three-way handshake", "Two-way routing", "Four-step NAT", "ARP exchange"], "answer": 0, "explanation": "TCP uses the SYN, SYN-ACK, ACK three-way handshake."}, 
+    {"category": "Transport", "question": "What is flow control in TCP?", "options": ["Mechanisms that prevent a sender from overwhelming a receiver", "A VLAN limit", "A routing metric", "A CRC option"], "answer": 0, "explanation": "TCP flow control helps match sending rate to receiver capacity."}, 
+    {"category": "Transport", "question": "What is acknowledgment in TCP?", "options": ["Confirmation that data was received", "A DNS lookup", "A VLAN tag", "A MAC rewrite"], "answer": 0, "explanation": "TCP uses ACKs to confirm receipt of data."}, 
+    {"category": "Transport", "question": "What is retransmission in TCP?", "options": ["Sending data again if it was lost or unacknowledged", "A NAT method", "A VLAN type", "A switch reboot"], "answer": 0, "explanation": "TCP retransmits data when needed for reliability."}, 
+    {"category": "Transport", "question": "What is segmentation?", "options": ["Breaking data into smaller transport-layer units", "Combining many subnets", "Creating VLANs", "Converting MAC to IP"], "answer": 0, "explanation": "Transport protocols divide data into manageable segments or datagrams."}, 
+    {"category": "Transport", "question": "What is multiplexing at the transport layer?", "options": ["Using port numbers so multiple applications share the network stack", "Using multiple cables only", "Using one MAC for all devices", "Repeating signals"], "answer": 0, "explanation": "Multiplexing allows many application conversations at once."}, 
+    {"category": "Applications", "question": "What application-layer protocol is used to transfer web pages?", "options": ["HTTP", "ARP", "ICMP", "RIP"], "answer": 0, "explanation": "HTTP is the protocol for web pages and APIs."}, 
+    {"category": "Applications", "question": "What application-layer protocol is the secure version of HTTP?", "options": ["HTTPS", "SSH", "FTP", "TFTP"], "answer": 0, "explanation": "HTTPS is HTTP over TLS."}, 
+    {"category": "Applications", "question": "What protocol is commonly used to securely log in to a device remotely?", "options": ["SSH", "Telnet", "HTTP", "DHCP"], "answer": 0, "explanation": "SSH is the standard secure remote CLI protocol."}, 
+    {"category": "Applications", "question": "What protocol is commonly used to transfer files interactively and reliably?", "options": ["FTP", "ARP", "ICMP", "RDP"], "answer": 0, "explanation": "FTP is a classic file transfer protocol."}, 
+    {"category": "Applications", "question": "What protocol is a simpler file transfer protocol often used for network booting?", "options": ["TFTP", "HTTPS", "SSH", "SNMPv3"], "answer": 0, "explanation": "TFTP is lightweight and often used in boot or image workflows."}, 
+    {"category": "Applications", "question": "What protocol is commonly used to synchronize time?", "options": ["NTP", "SMTP", "SSH", "RIP"], "answer": 0, "explanation": "NTP synchronizes clocks."}, 
+    {"category": "Applications", "question": "What protocol is commonly used to send email between mail servers?", "options": ["SMTP", "POP3", "IMAP", "SNMP"], "answer": 0, "explanation": "SMTP is used for sending email."}, 
+    {"category": "Applications", "question": "What protocol is commonly used by a client to retrieve email while leaving it on the server with synchronization features?", "options": ["IMAP", "SMTP", "ARP", "DNS"], "answer": 0, "explanation": "IMAP is commonly used for mailbox synchronization."}, 
+    {"category": "Applications", "question": "What protocol is commonly used for downloading email to a client in a simpler mailbox model?", "options": ["POP3", "SSH", "NTP", "SNMP"], "answer": 0, "explanation": "POP3 is a classic mail retrieval protocol."}, 
+    {"category": "Applications", "question": "What protocol is commonly used for remote desktop access to Windows systems?", "options": ["RDP", "ARP", "DNS", "DHCP"], "answer": 0, "explanation": "RDP stands for Remote Desktop Protocol."}, 
+    {"category": "Applications", "question": "What protocol is commonly used for device monitoring and management?", "options": ["SNMP", "HTTP", "RIP", "PPP"], "answer": 0, "explanation": "SNMP is used for monitoring and management."}, 
+    {"category": "Applications", "question": "What does SNMP stand for?", "options": ["Simple Network Management Protocol", "Secure Network Mapping Process", "Simple Node Management Port", "Switch Network Management Plan"], "answer": 0, "explanation": "SNMP stands for Simple Network Management Protocol."}, 
+    {"category": "Applications", "question": "Which SNMP version adds strong security features such as authentication and encryption?", "options": ["SNMPv3", "SNMPv1", "SNMPv2c only", "All versions equally"], "answer": 0, "explanation": "SNMPv3 provides stronger security."}, 
+    {"category": "Applications", "question": "What protocol is often used to automatically discover a network printer's hostname from a server name lookup?", "options": ["DNS", "ARP", "RIP", "STP"], "answer": 0, "explanation": "DNS resolves hostnames to IP addresses."}, 
+    {"category": "Security", "question": "What is the main benefit of using SSH instead of Telnet?", "options": ["SSH encrypts the session", "SSH is only for wireless", "SSH removes routing", "SSH uses MAC addresses"], "answer": 0, "explanation": "SSH protects credentials and traffic with encryption."}, 
+    {"category": "Security", "question": "What is least privilege?", "options": ["Giving users only the access they need", "Giving everyone admin rights", "Removing all passwords", "Allowing any inbound traffic"], "answer": 0, "explanation": "Least privilege reduces risk by limiting access."}, 
+    {"category": "Security", "question": "What is multifactor authentication?", "options": ["Using more than one type of verification to log in", "Using more than one cable", "Assigning more than one IP", "Creating many VLANs"], "answer": 0, "explanation": "MFA strengthens authentication with multiple factors."}, 
+    {"category": "Security", "question": "What is an ACL in networking?", "options": ["A list of permit and deny rules for traffic", "A cable type", "A subnet mask", "A DNS resolver"], "answer": 0, "explanation": "ACL stands for Access Control List."}, 
+    {"category": "Security", "question": "What can an ACL commonly match at Layer 3/4?", "options": ["IP addresses, protocols, and sometimes ports", "Monitor brightness", "Cable jacket color", "Only MAC OUIs"], "answer": 0, "explanation": "ACLs are often used to filter by IPs, protocols, and ports."}, 
+    {"category": "Security", "question": "What is 802.1X commonly used for?", "options": ["Port-based network access control", "VLAN tagging", "Dynamic routing", "NAT overload"], "answer": 0, "explanation": "802.1X authenticates devices or users before granting network access."}, 
+    {"category": "Security", "question": "What is WPA2 or WPA3 associated with?", "options": ["Wi‑Fi security", "OSPF authentication only", "ARP entries", "Ethernet preamble"], "answer": 0, "explanation": "WPA2 and WPA3 are Wi‑Fi security standards."}, 
+    {"category": "Security", "question": "What is a DMZ in networking?", "options": ["A network segment for systems exposed to less-trusted networks", "A cable tester mode", "A VLAN tag type", "A TCP flag"], "answer": 0, "explanation": "A DMZ isolates public-facing systems from more trusted internal networks."}, 
+    {"category": "Security", "question": "What is a common reason to segment networks with VLANs or subnets?", "options": ["Improving security and limiting broadcast scope", "Removing the need for routing", "Eliminating IP addresses", "Making cables longer"], "answer": 0, "explanation": "Segmentation improves control, performance, and security."}, 
+    {"category": "Troubleshooting", "question": "Which command checks whether a destination responds over IP?", "options": ["ping", "nslookup", "mkdir", "copy"], "answer": 0, "explanation": "Ping tests basic IP reachability."}, 
+    {"category": "Troubleshooting", "question": "Which command shows the route/path packets take?", "options": ["traceroute or tracert", "ping", "hostname", "arp -a only"], "answer": 0, "explanation": "Traceroute reveals hop-by-hop path information."}, 
+    {"category": "Troubleshooting", "question": "Which command can show DNS resolution for a name?", "options": ["nslookup", "route print", "show cdp neighbors", "arp -d"], "answer": 0, "explanation": "nslookup queries DNS."}, 
+    {"category": "Troubleshooting", "question": "Which command commonly shows a device's IP configuration on Windows?", "options": ["ipconfig", "ifconfig", "show ip interface brief", "dig"], "answer": 0, "explanation": "ipconfig shows IP details on Windows."}, 
+    {"category": "Troubleshooting", "question": "Which command commonly shows interface IPs on many Linux systems?", "options": ["ip addr", "net use", "copy", "route add only"], "answer": 0, "explanation": "'ip addr' displays interface addressing on Linux."}, 
+    {"category": "Troubleshooting", "question": "What does 'arp -a' commonly display on many systems?", "options": ["The ARP cache", "The routing protocol table", "The DNS zone file", "The switchport VLAN list"], "answer": 0, "explanation": "It displays the current ARP neighbor cache."}, 
+    {"category": "Troubleshooting", "question": "What is the first thing to confirm when a host cannot reach anything on the network?", "options": ["Basic IP configuration and link status", "The OSPF area design", "The email server banner", "The STP root on all switches"], "answer": 0, "explanation": "Start with fundamentals such as link, IP, mask, and gateway."}, 
+    {"category": "Troubleshooting", "question": "If two hosts on the same subnet cannot talk, what is one local issue to check?", "options": ["Incorrect subnet mask or VLAN mismatch", "Default route to ISP", "Public DNS root hints", "BGP communities"], "answer": 0, "explanation": "Local subnet or VLAN issues often break same-subnet communication."}, 
+    {"category": "Troubleshooting", "question": "If a host can reach local devices but not remote networks, what is a likely item to check?", "options": ["Default gateway", "Preamble length", "FCS byte count", "MAC OUI vendor"], "answer": 0, "explanation": "The default gateway is required for off-subnet communication."}, 
+    {"category": "Troubleshooting", "question": "If users can ping an IP but cannot browse by name, what should be checked next?", "options": ["DNS", "PoE budget", "STP topology only", "CSMA/CD"], "answer": 0, "explanation": "That symptom often points to a DNS problem."}, 
+    {"category": "Troubleshooting", "question": "What is duplex mismatch likely to cause?", "options": ["Slow speeds and interface errors", "Better latency", "Automatic route summarization", "Improved DNS"], "answer": 0, "explanation": "Duplex mismatches degrade performance and cause errors."}, 
+    {"category": "Troubleshooting", "question": "What does an interface down/down state usually indicate?", "options": ["A physical or administrative problem", "Healthy routed connectivity", "Successful DHCP relay", "Working trunk negotiation"], "answer": 0, "explanation": "Down/down often suggests no physical signal or a disabled state depending on device wording."}, 
+    {"category": "Troubleshooting", "question": "What does an interface up/up state usually indicate?", "options": ["The interface is operational at that layer state", "The interface has no IP", "The DNS server is offline", "STP is disabled"], "answer": 0, "explanation": "Up/up generally means the interface is operational."}, 
+    {"category": "Troubleshooting", "question": "What should you compare when verifying whether two IPv4 hosts are in the same subnet?", "options": ["Their IP addresses and subnet masks", "Their screen size", "Their serial numbers", "Their NTP settings"], "answer": 0, "explanation": "Subnet membership depends on both the address and mask."}, 
+    {"category": "Troubleshooting", "question": "What does packet capture help with?", "options": ["Seeing actual traffic details on the wire", "Increasing bandwidth instantly", "Assigning MAC addresses", "Creating default routes"], "answer": 0, "explanation": "Packet captures reveal protocol details, errors, and traffic patterns."}, 
+    {"category": "Troubleshooting", "question": "Which tool is widely used for packet capture and analysis?", "options": ["Wireshark", "PowerPoint", "GNS3 only", "Disk cleanup"], "answer": 0, "explanation": "Wireshark is a standard packet analysis tool."}, 
+    {"category": "Troubleshooting", "question": "What is a baseline in troubleshooting?", "options": ["A known-good reference for comparison", "A cable tester brand", "A default gateway", "A VLAN tag"], "answer": 0, "explanation": "Baselines help identify abnormal behavior by comparison to normal conditions."}, 
+    {"category": "Troubleshooting", "question": "What is one benefit of documenting network changes?", "options": ["It makes troubleshooting easier and safer", "It removes the need for backups", "It disables loops", "It changes MAC addresses"], "answer": 0, "explanation": "Good documentation improves recovery and troubleshooting."}, 
+    {"category": "Troubleshooting", "question": "What is one purpose of log messages and monitoring?", "options": ["Detecting issues and trends earlier", "Replacing routing tables", "Changing ARP automatically", "Providing fiber"], "answer": 0, "explanation": "Monitoring and logs help reveal faults and patterns."}, 
+    {"category": "Troubleshooting", "question": "What does a cable tester primarily help verify?", "options": ["Physical cabling issues such as opens, shorts, or pair problems", "DNS server health", "OSPF adjacency", "NAT rules"], "answer": 0, "explanation": "Cable testers help find Layer 1 problems."}, 
+    {"category": "Troubleshooting", "question": "If a Wi‑Fi client has a strong signal but poor performance, what is one possible reason?", "options": ["Interference or channel congestion", "Too many static routes", "The ARP cache is empty", "The preamble is 7 bytes"], "answer": 0, "explanation": "Wireless performance is affected by interference and airtime contention."}, 
+    {"category": "Troubleshooting", "question": "What is one reason to use a loopback interface on a router?", "options": ["Stable logical interface for management, testing, or protocol identification", "To power an access point", "To replace Ethernet", "To create collisions"], "answer": 0, "explanation": "Loopbacks are logical interfaces that stay up unless administratively shut."}, 
+    {"category": "Cisco CLI", "question": "What prompt mode is 'Router>' commonly called on Cisco devices?", "options": ["User EXEC mode", "Privileged EXEC mode", "Global configuration mode", "Interface configuration mode"], "answer": 0, "explanation": "'>' usually indicates User EXEC mode."}, 
+    {"category": "Cisco CLI", "question": "What prompt mode is 'Router#' commonly called?", "options": ["Privileged EXEC mode", "User EXEC mode", "ROMMON only", "Line configuration mode"], "answer": 0, "explanation": "'#' usually indicates Privileged EXEC mode."}, 
+    {"category": "Cisco CLI", "question": "What prompt mode is 'Router(config)#'?", "options": ["Global configuration mode", "User EXEC mode", "Privileged EXEC only", "Interface status mode"], "answer": 0, "explanation": "'(config)#' is global configuration mode."}, 
+    {"category": "Cisco CLI", "question": "Which command typically moves from User EXEC to Privileged EXEC?", "options": ["enable", "disable", "exit", "configure terminal"], "answer": 0, "explanation": "'enable' enters privileged EXEC mode."}, 
+    {"category": "Cisco CLI", "question": "Which command typically enters global configuration mode from privileged EXEC?", "options": ["configure terminal", "show running-config", "enable", "copy run start"], "answer": 0, "explanation": "'configure terminal' enters global configuration mode."}, 
+    {"category": "Cisco CLI", "question": "Which command sets the device hostname to R1?", "options": ["hostname R1", "name R1", "router-name R1", "set hostname R1"], "answer": 0, "explanation": "The correct Cisco IOS command is 'hostname R1'."}, 
+    {"category": "Cisco CLI", "question": "Which command exits the current mode by one level?", "options": ["exit", "end", "reload", "erase"], "answer": 0, "explanation": "'exit' backs out one level."}, 
+    {"category": "Cisco CLI", "question": "Which command jumps back to privileged EXEC from configuration submodes?", "options": ["end", "continue", "apply", "back"], "answer": 0, "explanation": "'end' returns to privileged EXEC mode."}, 
+    {"category": "Cisco CLI", "question": "Which keyboard shortcut on Cisco IOS commonly completes a command or keyword?", "options": ["Tab", "Ctrl+C", "Esc", "Shift"], "answer": 0, "explanation": "Tab often auto-completes commands."}, 
+    {"category": "Cisco CLI", "question": "Which symbol indicates help for available commands in Cisco IOS?", "options": ["?", "!", "$", "@"], "answer": 0, "explanation": "Typing '?' shows context-sensitive help."}, 
+    {"category": "Cisco CLI", "question": "Which command displays the current running configuration?", "options": ["show running-config", "show startup-config", "show interfaces status", "debug all"], "answer": 0, "explanation": "'show running-config' displays the active configuration."}, 
+    {"category": "Cisco CLI", "question": "Which command displays the saved configuration used at boot?", "options": ["show startup-config", "show running-config", "dir flash:", "copy run start"], "answer": 0, "explanation": "'show startup-config' shows the saved boot configuration."}, 
+    {"category": "Cisco CLI", "question": "Which command saves the running configuration to startup configuration?", "options": ["copy running-config startup-config", "erase startup-config", "reload", "show archive"], "answer": 0, "explanation": "That command saves the current configuration."}, 
+    {"category": "Cisco CLI", "question": "Which older shorthand command often does the same save operation?", "options": ["write memory", "delete flash:", "clear arp", "service dhcp"], "answer": 0, "explanation": "'write memory' is an older equivalent to saving the config."}, 
+    {"category": "Cisco CLI", "question": "Which command enables simple encryption of certain plaintext passwords in the configuration?", "options": ["service password-encryption", "enable password encryption", "password encrypted", "crypto password on"], "answer": 0, "explanation": "'service password-encryption' obfuscates certain passwords in the config."}, 
+    {"category": "Cisco CLI", "question": "Which command disables that simple password obfuscation feature?", "options": ["no service password-encryption", "disable password-encryption", "undo service password", "service password clear"], "answer": 0, "explanation": "Adding 'no' disables the feature."}, 
+    {"category": "Cisco CLI", "question": "Which command sets a console line password after entering line console 0 mode?", "options": ["password <value>", "secret <value>", "username <value>", "enable secret <value>"], "answer": 0, "explanation": "Under line configuration, 'password <value>' sets the line password."}, 
+    {"category": "Cisco CLI", "question": "Which command makes the configured console line password actually required?", "options": ["login", "enable", "password-encryption", "service line-login"], "answer": 0, "explanation": "The 'login' command tells the line to prompt for its configured password."}, 
+    {"category": "Cisco CLI", "question": "Which command is more secure for privileged mode than enable password?", "options": ["enable secret", "line console 0", "service password-encryption", "banner motd"], "answer": 0, "explanation": "'enable secret' stores a stronger hash than the older 'enable password'."}, 
+    {"category": "Cisco CLI", "question": "What does 'reload' do on a Cisco device?", "options": ["Reboots the device", "Saves the config", "Deletes the ARP table only", "Shows logs"], "answer": 0, "explanation": "'reload' restarts the device."}, 
+    {"category": "Cisco CLI", "question": "What is the purpose of a banner MOTD?", "options": ["Displaying a message to users at login", "Assigning an IP address", "Creating a VLAN trunk", "Synchronizing NTP"], "answer": 0, "explanation": "A banner MOTD shows a message such as a warning or notice."}, 
+    {"category": "Cisco CLI", "question": "Which command commonly shows a summary of interface IP addresses and status?", "options": ["show ip interface brief", "show vlan brief", "show mac address-table", "show cdp neighbors"], "answer": 0, "explanation": "'show ip interface brief' is a popular quick summary command."}, 
+    {"category": "Cisco CLI", "question": "Which command commonly shows switch VLAN information?", "options": ["show vlan brief", "show ip route", "show version", "show ntp associations"], "answer": 0, "explanation": "'show vlan brief' displays VLAN membership details on switches."}, 
+    {"category": "Cisco CLI", "question": "Which command commonly shows the routing table on a Cisco router?", "options": ["show ip route", "show arp", "show startup-config", "show power"], "answer": 0, "explanation": "'show ip route' displays the IPv4 routing table."}, 
+    {"category": "Cisco CLI", "question": "Which command commonly shows learned MAC addresses on a switch?", "options": ["show mac address-table", "show ip route", "show cdp neighbors detail", "show access-lists"], "answer": 0, "explanation": "'show mac address-table' displays the switch forwarding table."}, 
+    {"category": "Cisco CLI", "question": "Which command commonly shows Cisco-discovered neighboring devices?", "options": ["show cdp neighbors", "show spanning-tree", "show clock", "show users"], "answer": 0, "explanation": "CDP neighbor commands show directly connected Cisco devices."}, 
+    {"category": "Cisco CLI", "question": "Which command commonly shows LLDP-discovered neighboring devices?", "options": ["show lldp neighbors", "show arp", "show ip nat translations", "show policy-map"], "answer": 0, "explanation": "LLDP neighbor commands show nearby devices using LLDP."}
+];
+
+/* --- GAME STATE & ELEMENTS --- */
+const startScreen = document.getElementById('startScreen');
+const quizScreen = document.getElementById('quizScreen');
+const resultScreen = document.getElementById('resultScreen');
+const modeOptions = document.querySelectorAll('#modeOptions .pick');
+const lengthOptions = document.querySelectorAll('#lengthOptions .pick');
+const topicSearch = document.getElementById('topicSearch');
+const topicCount = document.getElementById('topicCount');
+const categoryText = document.getElementById('categoryText');
+
+const modeLabel = document.getElementById('modeLabel');
+const streakLabel = document.getElementById('streakLabel');
+const questionLabel = document.getElementById('questionCurrent');
+const questionTotal = document.getElementById('questionTotal');
+const timerLabel = document.getElementById('timerLabel');
+const progressBar = document.getElementById('progressBar');
+const questionCategory = document.getElementById('questionCategory');
+const questionText = document.getElementById('questionText');
+const answersWrap = document.getElementById('answersWrap');
+const explanationBox = document.getElementById('explanationBox');
+const feedbackTitle = document.getElementById('feedbackTitle');
+const feedbackText = document.getElementById('feedbackText');
+const nextWrap = document.getElementById('nextWrap');
+
+let selectedMode = 'practice';
+let selectedLength = 20;
+let workingBank = [...questionBank];
+let questions = [];
+let currentIndex = 0;
+let score = 0;
+let streak = 0;
+let bestStreak = 0;
+let answered = false;
+let timer = null;
+let timeLeft = 0;
+let reviewData = [];
+let highScore = localStorage.getItem('netQuizHighScore') || 0;
+
+/* --- INITIALIZATION --- */
+document.getElementById('highScoreDisplay').textContent = highScore;
+document.getElementById('totalQuestionsDisplay').textContent = questionBank.length;
+document.getElementById('categoryTotalDisplay').textContent = new Set(questionBank.map(q => q.category)).size;
+
+/* --- UTILS --- */
+function shuffleArray(arr) {
+  const clone = [...arr];
+  for (let i = clone.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [clone[i], clone[j]] = [clone[j], clone[i]];
+  }
+  return clone;
+}
+
+function prepareQuestion(rawQuestion) {
+  const correctOption = rawQuestion.options[rawQuestion.answer];
+  const shuffledOptions = shuffleArray(rawQuestion.options);
+  const remappedAnswer = shuffledOptions.findIndex(opt => opt === correctOption);
+
+  return {
+    ...rawQuestion,
+    options: shuffledOptions,
+    answer: remappedAnswer >= 0 ? remappedAnswer : rawQuestion.answer
+  };
+}
+
+function prepareQuestions(bank) {
+  return bank.map(prepareQuestion);
+}
+
+/* --- START SCREEN LOGIC --- */
+function updateWorkingBank() {
+  const term = topicSearch.value.trim().toLowerCase();
+  if (!term) {
+    workingBank = [...questionBank];
+    topicCount.textContent = `Showing full bank: ${questionBank.length} questions`;
+  } else {
+    workingBank = questionBank.filter(q =>
+      q.category.toLowerCase().includes(term) ||
+      q.question.toLowerCase().includes(term) ||
+      q.explanation.toLowerCase().includes(term) ||
+      q.options.some(o => o.toLowerCase().includes(term))
+    );
+    topicCount.textContent = `Filtered: ${workingBank.length} questions matching "${term}"`;
+  }
+}
+
+updateWorkingBank();
+topicSearch.addEventListener('input', updateWorkingBank);
+
+modeOptions.forEach(card => card.addEventListener('click', () => {
+  modeOptions.forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedMode = card.dataset.mode;
+}));
+
+lengthOptions.forEach(card => card.addEventListener('click', () => {
+  lengthOptions.forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedLength = card.dataset.length === 'all' ? 'all' : Number(card.dataset.length);
+}));
+
+document.getElementById('showCategoriesBtn').addEventListener('click', () => {
+  const counts = {};
+  for (const q of questionBank) counts[q.category] = (counts[q.category] || 0) + 1;
+  const lines = Object.entries(counts).sort((a,b) => a[0].localeCompare(b[0])).map(([k,v]) => `${k} (${v})`);
+  categoryText.textContent = lines.join(' • ');
+});
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  updateWorkingBank();
+  if (!workingBank.length) {
+    alert('No questions match that topic search. Clear the search or try a different keyword.');
+    return;
+  }
+  const shuffled = shuffleArray(workingBank);
+  const selectedQuestions = selectedLength === 'all' ? shuffled : shuffled.slice(0, Math.min(selectedLength, shuffled.length));
+  questions = prepareQuestions(selectedQuestions);
+  
+  currentIndex = 0;
+  score = 0;
+  streak = 0;
+  bestStreak = 0;
+  reviewData = [];
+  
+  startScreen.classList.remove('active');
+  resultScreen.classList.remove('active');
+  quizScreen.classList.add('active');
+  modeLabel.textContent = `Mode: ${selectedMode.charAt(0).toUpperCase()+selectedMode.slice(1)}`;
+  loadQuestion();
+});
+
+document.getElementById('quitBtn').addEventListener('click', () => {
+  if (confirm('Quit the quiz?')) {
+    clearTimer();
+    quizScreen.classList.remove('active');
+    startScreen.classList.add('active');
+  }
+});
+
+/* --- QUIZ LOGIC --- */
+function clearTimer() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function updateStreakUI() {
+  streakLabel.textContent = `🔥 Streak: ${streak}`;
+  if(streak > 0) {
+    streakLabel.style.opacity = '1';
+    streakLabel.style.transform = 'scale(1.1)';
+    setTimeout(() => streakLabel.style.transform = 'scale(1)', 200);
+  }
+}
+
+function loadQuestion() {
+  clearTimer();
+  answered = false;
+  explanationBox.classList.remove('show');
+  explanationBox.innerHTML = '';
+  nextWrap.style.display = 'none';
+  answersWrap.innerHTML = '';
+
+  const q = questions[currentIndex];
+  questionCategory.textContent = q.category;
+  questionText.textContent = q.question;
+  questionLabel.textContent = currentIndex + 1;
+  questionTotal.textContent = questions.length;
+  updateStreakUI();
+
+  // Progress Bar
+  const progress = ((currentIndex) / questions.length) * 100;
+  progressBar.style.width = `${progress}%`;
+
+  // Generate Answer Buttons
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    // Add keyboard hint
+    const keyHint = document.createElement('span');
+    keyHint.className = 'key-hint';
+    keyHint.textContent = idx + 1;
+    btn.prepend(keyHint);
+    
+    const textSpan = document.createElement('span');
+    textSpan.textContent = opt;
+    btn.appendChild(textSpan);
+
+    btn.addEventListener('click', () => selectAnswer(idx));
+    answersWrap.appendChild(btn);
+  });
+
+  // Timer Setup
+  timerLabel.classList.remove('timer-critical');
+  if (selectedMode === 'practice') {
+    timerLabel.textContent = 'Time: Unlimited';
+  } else {
+    timeLeft = selectedMode === 'timed' ? 20 : 25;
+    timerLabel.textContent = `Time: ${timeLeft}s`;
+    timer = setInterval(() => {
+      timeLeft--;
+      timerLabel.textContent = `Time: ${timeLeft}s`;
+      if (timeLeft <= 5) timerLabel.classList.add('timer-critical');
+      if (timeLeft <= 0) {
+        clearTimer();
+        if (!answered) timeoutQuestion();
+      }
+    }, 1000);
+  }
+}
+
+function selectAnswer(index) {
+  if (answered) return;
+  answered = true;
+  clearTimer();
+  
+  const q = questions[currentIndex];
+  const buttons = [...document.querySelectorAll('.answer-btn')];
+  const isCorrect = index === q.answer;
+
+  // UI Updates
+  buttons.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.answer) btn.classList.add('correct');
+    if (i === index && !isCorrect) btn.classList.add('wrong');
+  });
+
+  if (isCorrect) {
+    score++;
+    streak++;
+    if (streak > bestStreak) bestStreak = streak;
+  } else {
+    streak = 0;
+  }
+  updateStreakUI();
+
+  // Review Data
+  reviewData.push({
+    question: q.question,
+    category: q.category,
+    userAnswer: q.options[index],
+    correctAnswer: q.options[q.answer],
+    explanation: q.explanation,
+    correct: isCorrect
+  });
+
+  // Feedback
+  progressBar.style.width = `${((currentIndex + 1) / questions.length) * 100}%`;
+  if (selectedMode !== 'exam') {
+    feedbackTitle.textContent = isCorrect ? "Correct!" : "Incorrect";
+    feedbackTitle.style.color = isCorrect ? "var(--success)" : "var(--danger)";
+    feedbackText.textContent = q.explanation;
+    explanationBox.classList.add('show');
+  }
+  nextWrap.style.display = 'flex';
+  document.getElementById('nextBtn').focus();
+}
+
+function timeoutQuestion() {
+  answered = true;
+  const q = questions[currentIndex];
+  const buttons = [...document.querySelectorAll('.answer-btn')];
+  
+  buttons.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.answer) btn.classList.add('correct');
+  });
+
+  streak = 0;
+  updateStreakUI();
+
+  reviewData.push({
+    question: q.question,
+    category: q.category,
+    userAnswer: 'No answer (time out)',
+    correctAnswer: q.options[q.answer],
+    explanation: q.explanation,
+    correct: false
+  });
+
+  if (selectedMode !== 'exam') {
+    feedbackTitle.textContent = "Time's Up!";
+    feedbackTitle.style.color = "var(--danger)";
+    feedbackText.textContent = q.explanation;
+    explanationBox.classList.add('show');
+  }
+  progressBar.style.width = `${((currentIndex + 1) / questions.length) * 100}%`;
+  nextWrap.style.display = 'flex';
+}
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  currentIndex++;
+  if (currentIndex >= questions.length) endGame();
+  else loadQuestion();
+});
+
+/* --- KEYBOARD CONTROLS --- */
+document.addEventListener('keydown', (e) => {
+  // Only allow keyboard shortcuts on Quiz Screen
+  if (!quizScreen.classList.contains('active')) return;
+
+  // 1-4 to select answer
+  if (!answered && (e.key >= '1' && e.key <= '4')) {
+    const index = parseInt(e.key) - 1;
+    // Safety check if question has fewer than 4 options (unlikely but possible)
+    if (index < questions[currentIndex].options.length) {
+      selectAnswer(index);
+    }
+  }
+
+  // Enter to go next
+  if (answered && e.key === 'Enter') {
+    currentIndex++;
+    if (currentIndex >= questions.length) endGame();
+    else loadQuestion();
+  }
+});
+
+/* --- END GAME & RESULTS --- */
+function endGame() {
+  clearTimer();
+  quizScreen.classList.remove('active');
+  resultScreen.classList.add('active');
+
+  const total = questions.length;
+  const correct = reviewData.filter(r => r.correct).length;
+  const wrong = total - correct;
+  const accuracy = Math.round((correct / total) * 100);
+
+  // Update High Score if better
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem('netQuizHighScore', highScore);
+    document.getElementById('highScoreDisplay').textContent = highScore;
+  }
+
+  document.getElementById('finalScore').textContent = `${accuracy}%`;
+  document.getElementById('correctCount').textContent = correct;
+  document.getElementById('wrongCount').textContent = wrong;
+  document.getElementById('bestStreakDisplay').textContent = bestStreak;
+
+  let msg = '';
+  if (accuracy >= 90) msg = 'Outstanding! You are a Network Architect. 🏆';
+  else if (accuracy >= 75) msg = 'Great job! You have solid networking knowledge. 🚀';
+  else if (accuracy >= 50) msg = 'Good effort. Keep practicing to sharpen your skills. 📚';
+  else msg = 'Keep studying! Review the explanations below to improve. 💪';
+  document.getElementById('finalMessage').textContent = msg;
+
+  const reviewList = document.getElementById('reviewList');
+  reviewList.innerHTML = '';
+  reviewData.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'review-item ' + (item.correct ? 'correct' : 'wrong');
+    div.innerHTML = `
+      <div style="font-weight:700; margin-bottom:4px;">${i + 1}. ${item.question}</div>
+      <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:2px;"><strong>Your Answer:</strong> ${item.userAnswer}</div>
+      <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:2px;"><strong>Correct Answer:</strong> ${item.correctAnswer}</div>
+      <div style="font-size:0.9rem; margin-top:4px;">${item.explanation}</div>
+    `;
+    reviewList.appendChild(div);
+  });
+}
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  resultScreen.classList.remove('active');
+  startScreen.classList.add('active');
+  document.getElementById('reviewSection').classList.add('hidden');
+  document.getElementById('reviewToggleBtn').textContent = 'Toggle Review';
+});
+
+document.getElementById('reviewToggleBtn').addEventListener('click', () => {
+  const sec = document.getElementById('reviewSection');
+  const btn = document.getElementById('reviewToggleBtn');
+  if (sec.classList.contains('hidden')) {
+    sec.classList.remove('hidden');
+    btn.textContent = 'Hide Review';
+  } else {
+    sec.classList.add('hidden');
+    btn.textContent = 'Toggle Review';
+  }
+});
+</script>
+</body>
+</html>
